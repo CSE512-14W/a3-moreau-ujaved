@@ -22,7 +22,6 @@ button {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-var dataset;
 function parseDate(d) {
   var parser = d3.time.format("%d-%b-%y").parse;
   if (parser(d) == null) {
@@ -43,22 +42,35 @@ function isValidDate(d) {
   return true;
 }
 
+function isValidGenre(g) {
+  if (g==null || g.length===0) {
+    return false;
+  }
+  return true;
+}
+
+var dataset;
+var numLayers;
+var stack;
 d3.csv("movies.csv", function(error, data) {
-    var dates1 = [];
-    var dates2 = [];
     dataset = data;
+    var genres = new Object();
     dataset.forEach(function(d) {
       d.date = parseDate(d['Release Date']);
-      if (!isValidDate(d.date)) {
-        //console.log("umar " + d.date + " " + dataset.indexOf(d));
+      if (!isValidDate(d.date) || !isValidGenre(d['Major Genre'])) {
         var idx = dataset.indexOf(d);
-        dataset.splice(idx,1); 
+        dataset.splice(idx,1);
+      } else {
+        d.date.setDate(1);
+        genres[d['Major Genre']] = true;
       }
-      //dates2.push(d.date);
     });
-    //console.log(dataset);
+    numLayers = Object.getOwnPropertyNames(genres).length;
+    stack = d3.layout.stack().offset("wiggle");
+
     console.log(d3.max(dataset, function(d) { return d.date; }));
     console.log(d3.min(dataset, function(d) { return d.date; }));
+    //console.log(Object.getOwnPropertyNames(genres));
     x.domain(d3.extent(data, function(d) { return d.date; }));
 });
 
@@ -69,17 +81,18 @@ var n = 20, // number of layers
     layers0 = stack(d3.range(n).map(function() { return bumpLayer(m); })),
     layers1 = stack(d3.range(n).map(function() { return bumpLayer(m); }));
 
+    //console.log(d3.range(n).map(function() { return bumpLayer(m); }));
+
 var width = 960,
     height = 500;
 
 var x = d3.time.scale()
     .range([0, width]);
 
-/*
 var x = d3.scale.linear()
     .domain([0, m - 1])
     .range([0, width]);
-*/
+
 var y = d3.scale.linear()
     .domain([0, d3.max(layers0.concat(layers1), function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); })])
     .range([height, 0]);
