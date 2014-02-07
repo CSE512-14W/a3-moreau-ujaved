@@ -12,6 +12,18 @@ svg {
   stroke-width: 1px;
 }
 
+.axis path,
+.axis line {
+    fill: none;
+    stroke: none;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
 </style>
 <body>
 <p>Click on this text to do cool stuff!</p>
@@ -198,6 +210,7 @@ function stackedArea2() {
     d3.select(this).append("text")
         .attr("x", (w - w_margin))
         .attr("dx", 4)
+        .attr("dy", -2)
         .text(d.key)
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
@@ -207,6 +220,16 @@ function stackedArea2() {
   g.select("path.area")
       .attr("d", function(d) { return area(d.values); });
 
+  var xAxis = d3.svg.axis()
+                  .scale(x)
+                  .orient("bottom")
+                  .ticks(5);  //Set rough # of ticks
+
+  //Create X axis
+  svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + (h) + ")")
+    .call(xAxis);
 }
 
 function initial() {
