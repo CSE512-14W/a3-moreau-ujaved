@@ -90,7 +90,7 @@ d3.csv("genre_popularity.csv", function(data) {
       .attr("class", "genre");
 
   //setTimeout(lines, duration);
-  initial();
+  stackedArea2();
 });
 
 function lines() {
@@ -151,6 +151,62 @@ function lines() {
       return true;
     }
   });*/
+}
+
+function stackedArea2() {
+
+  x = d3.time.scale().range([0, w - w_margin]);
+  y = d3.scale.linear().range([h, 0]);
+
+  // Compute the minimum and maximum date across genres.
+  x.domain([
+    d3.min(genres, function(d) { return d.values[0].date; }),
+    d3.max(genres, function(d) { return d.values[d.values.length - 1].date; })
+  ]);
+  // Compute the minimum and maximum total popularity.
+  y.domain([
+    0, 
+    d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))
+  ])
+
+  var stack = d3.layout.stack()
+      .values(function(d) { return d.values; })
+      .x(function(d) { return d.date; })
+      .y(function(d) { return d.popularity; })
+      .out(function(d, y0, y) { d.popularity0 = y0; })
+      .order("reverse");
+
+  stack(genres);
+
+  var g = svg.selectAll(".genre");
+
+  area
+      .y0(function(d) { return y(d.popularity0); })
+      .y1(function(d) { return y(d.popularity0 + d.popularity); });
+
+  g.each(function(d) {
+    y.domain([0, d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))]);
+
+    d3.select(this).selectAll(".area")
+        .data(d3.range(3))
+      .enter().insert("path", ".line")
+      .filter(function(d, i) { return !i; })
+        .attr("class", "area")
+        .attr("d", area(d.values))
+        .style("fill", color(d.key));
+
+    d3.select(this).append("text")
+        .attr("x", (w - w_margin))
+        .attr("dx", 4)
+        .text(d.key)
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "11px")
+        .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.popularity / 2 + d.popularity0))+5.5) + ")"; });
+  });
+
+  g.select("path.area")
+      .attr("d", function(d) { return area(d.values); });
+
 }
 
 function initial() {
