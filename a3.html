@@ -64,7 +64,7 @@ var area = d3.svg.area()
 d3.csv("genre_popularity.csv", function(data) {
   var parse = d3.time.format("%Y").parse;
 
-  // Nest stock values by genre.
+  // Nest popularity values by genre.
   genres = d3.nest()
       .key(function(d) { return d.genre; })
       .entries(stocks = data);
@@ -82,14 +82,15 @@ d3.csv("genre_popularity.csv", function(data) {
 
   // Number of distinct genres 
   // TODO: derive this from data instead of making it a parameter
-  num_genres = 11;
+  num_genres = genres.length;
 
   var g = svg.selectAll("g")
       .data(genres)
     .enter().append("g")
       .attr("class", "genre");
 
-  setTimeout(lines, duration);
+  //setTimeout(lines, duration);
+  initial();
 });
 
 function lines() {
@@ -106,7 +107,7 @@ function lines() {
       .attr("transform", function(d, i) { return "translate(0," + (i * h / num_genres + 10) + ")"; });
 
   g.each(function(d) {
-    var e = d3.select(this);
+    //var e = d3.select(this);
 
     /*e.append("path")
         .attr("class", "line");
@@ -139,7 +140,9 @@ function lines() {
     });
   }
 
-  var k = 1, n = genres[0].values.length;
+  setTimeout(initial, 500);
+
+  /*var k = 1, n = genres[0].values.length;
   d3.timer(function() {
     draw(k);
     if ((k += 2) >= n - 1) {
@@ -147,10 +150,19 @@ function lines() {
       setTimeout(initial, 500);
       return true;
     }
-  });
+  });*/
 }
 
 function initial() {
+
+  x = d3.time.scale().range([0, w - w_margin]);
+  y = d3.scale.linear().range([h / num_genres - h_margin, 0]);
+
+  // Compute the minimum and maximum date across genres.
+  x.domain([
+    d3.min(genres, function(d) { return d.values[0].date; }),
+    d3.max(genres, function(d) { return d.values[d.values.length - 1].date; })
+  ]);
 
   svg.insert("defs", ".genre")
     .append("clipPath")
@@ -159,55 +171,33 @@ function initial() {
       .attr("width", w)
       .attr("height", h / num_genres - h_margin);
 
-  //var color = d3.scale.ordinal()
-  //    .range(["#c6dbef", "#9ecae1", "#6baed6"]);
-
   var g = svg.selectAll(".genre")
+      .attr("transform", function(d, i) { return "translate(0," + (i * h / num_genres + 10) + ")"; })
       .attr("clip-path", "url(#clip)");
 
   area
       .y0(h / num_genres - h_margin);
 
-  /*g.select("circle").transition()
-      .duration(duration)
-      .attr("transform", function(d) { return "translate(" + (w - w_margin) + "," + (-h / num_genres) + ")"; })
-      .remove();*/
-
-  g.select("text").transition()
-      .duration(duration)
-      .attr("transform", function(d) { return "translate(" + (w - w_margin) + "," + (h / num_genres - h_margin) + ")"; })
-      .attr("dy", -(h / num_genres - h_margin)/2);
-
   g.each(function(d) {
     y.domain([0, d.maxpopularity]);
 
-    d3.select(this).selectAll(".line").transition()
-        .duration(duration)
-        .attr("d", line(d.values))
-        .style("stroke-opacity", 1e-6)
-        .remove();
-
+    d3.select(this).append("text")
+        .attr("x", (w - w_margin))
+        .attr("y", (h / num_genres - h_margin))
+        .attr("dx", 4)
+        .attr("dy", -2)
+        .text(d.key)
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "11px");
 
     d3.select(this).selectAll(".area")
         .data(d3.range(3))
       .enter().insert("path", ".line")
+      .filter(function(d, i) { return !i; })
         .attr("class", "area")
         .attr("transform", function(d) { return "translate(0," + (d * (h / num_genres - h_margin)) + ")"; })
         .attr("d", area(d.values))
         .style("fill", color(d.key)); // was i instead of d.key
-
-    d3.select(this).selectAll(".area").transition()
-        .duration(duration)
-        .style("fill-opacity", 1e-6)
-        .attr("d", area(d.values))
-        .remove();
-
-    d3.select(this).selectAll(".area")
-        .filter(function(d, i) { return !i; })
-      .transition()
-        .duration(duration)
-        .style("fill", color(d.key))
-        .attr("d", area(d.values));
   });
   
   g.transition()
@@ -354,7 +344,7 @@ function stackedArea() {
       .attr("d", function(d) { return line(d.values); });
 
   t.select("text")
-      .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + (w - w_margin) + "," + y(d.popularity / 2 + d.popularity0) + ")"; });
+      .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + (y(d.popularity / 2 + d.popularity0) - m[0]+2) + ")"; });
 
   //Comment out for now
   //setTimeout(streamgraph, duration + delay);
