@@ -42,7 +42,9 @@ var x,
     duration = 1500,
     delay = 500;
 
-var color = d3.scale.category10();
+var update = false;
+
+var color = d3.scale.category20c();
 
 var svg = d3.select("body").append("svg")
     .attr("width", w + m[1] + m[3])
@@ -73,7 +75,15 @@ var area = d3.svg.area()
     .x(function(d) { return x(d.date); })
     .y1(function(d) { return y(d.popularity); });
 
-d3.csv("genre_popularity.csv", function(data) {
+d3.csv("genre_popularity.csv", processCSV);
+
+d3.select("p")
+  .on("click", function() {
+    d3.csv("genre_gross.csv", processCSV);
+  });
+
+
+function processCSV(data) {
   var parse = d3.time.format("%Y").parse;
 
   // Nest popularity values by genre.
@@ -90,17 +100,25 @@ d3.csv("genre_popularity.csv", function(data) {
   });
 
   // Sort by maximum popularity, descending.
-  genres.sort(function(a, b) { return b.maxpopularity - a.maxpopularity; });
+  //genres.sort(function(a, b) { return b.maxpopularity - a.maxpopularity; });
 
   // Number of distinct genres 
   num_genres = genres.length;
 
-  var g = svg.selectAll("g")
-      .data(genres)
-    .enter().append("g")
-      .attr("class", "genre");
-  stackedArea();
-});
+
+  if (update == false) {
+    var g = svg.selectAll("g")
+        .data(genres)
+      .enter().append("g")
+        .attr("class", "genre");
+    stackedArea();
+    update = true;
+  } else {
+    var g = svg.selectAll("g")
+        .data(genres)
+    updateAreas();
+  }
+}
 
 function stackedArea() {
 
@@ -167,6 +185,41 @@ function stackedArea() {
     .attr("class", "axis")
     .attr("transform", "translate(" + 0 + " ," + (h) + ")")
     .call(xAxis);
+}
+
+function updateAreas() {
+
+  var stack = d3.layout.stack()
+      .values(function(d) { return d.values; })
+      .x(function(d) { return d.date; })
+      .y(function(d) { return d.popularity; })
+      .out(function(d, y0, y) { d.popularity0 = y0; })
+      .order("reverse");
+
+  stack(genres);
+
+  y
+      .domain([0, d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))])
+      .range([h, 0]);
+
+  area
+      .y0(function(d) { return y(d.popularity0); })
+      .y1(function(d) { return y(d.popularity0 + d.popularity); });
+
+  var t = svg.selectAll(".genre").transition()
+      .duration(duration)
+      .attr("transform", "translate(0,0)")
+      .each("end", function() { d3.select(this).attr("transform", null); });
+
+  t.select("path.area")
+      .attr("d", function(d) { return area(d.values); });
+
+  t.select("path.line")
+      .style("stroke-opacity", function(d, i) { return i < 3 ? 1e-6 : 1; })
+      .attr("d", function(d) { return line(d.values); });
+
+  t.select("text")
+      .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.popularity / 2 + d.popularity0) + ")"; });
 }
 
 </script>
