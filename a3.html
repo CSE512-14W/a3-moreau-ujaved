@@ -14,6 +14,7 @@ svg {
 
 </style>
 <body>
+<p>Click on this text to do cool stuff!</p>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -143,10 +144,61 @@ function lines() {
     draw(k);
     if ((k += 2) >= n - 1) {
       draw(n - 1);
-      setTimeout(horizons, 500);
+      setTimeout(initial, 500);
       return true;
     }
   });
+}
+
+function initial() {
+
+  svg.insert("defs", ".genre")
+    .append("clipPath")
+      .attr("id", "clip")
+    .append("rect")
+      .attr("width", w)
+      .attr("height", h / num_genres - h_margin);
+
+  //var color = d3.scale.ordinal()
+  //    .range(["#c6dbef", "#9ecae1", "#6baed6"]);
+
+  var g = svg.selectAll(".genre")
+      .attr("clip-path", "url(#clip)");
+
+  area
+      .y0(h / num_genres - h_margin);
+
+  g.select("circle").transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + (w - w_margin) + "," + (-h / num_genres) + ")"; })
+      .remove();
+
+  g.select("text").transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + (w - w_margin) + "," + (h / num_genres - h_margin) + ")"; })
+      .attr("dy", -(h / num_genres - h_margin)/2);
+
+  g.each(function(d) {
+    y.domain([0, d.maxpopularity]);
+
+    d3.select(this).selectAll(".line").transition()
+        .duration(duration)
+        .attr("d", line(d.values))
+        .style("stroke-opacity", 1e-6);
+
+
+    d3.select(this).selectAll(".area")
+        .data(d3.range(3))
+      .enter().insert("path", ".line")
+        .attr("class", "area")
+        .attr("transform", function(d) { return "translate(0," + (d * (h / num_genres - h_margin)) + ")"; })
+        .attr("d", area(d.values))
+        .style("fill", color(d.key)); // was i instead of d.key
+  });
+
+  d3.select("p")
+    .on("click", areas);
+
 }
 
 function horizons() {
@@ -195,11 +247,14 @@ function horizons() {
         .attr("d", line(d.values))
         .style("stroke-opacity", 1e-6);
 
-    d3.select(this).selectAll(".area").transition()
+    d3.select(this).selectAll(".area")
+        .filter(function(d, i) { return !i; })
+      .transition()
         .duration(duration)
         .style("fill-opacity", 1)
         .attr("d", area(d.values))
         .each("end", function() { d3.select(this).style("fill-opacity", null); });
+
   });
 
   setTimeout(areas, duration + delay);
@@ -209,7 +264,7 @@ function areas() {
   var g = svg.selectAll(".genre");
 
   axis
-      .y(h / num_genres - 21);
+      .y(h / num_genres - h_margin - 1);
 
   g.select(".line")
       .attr("d", function(d) { return axis(d.values); });
@@ -222,9 +277,7 @@ function areas() {
         .style("stroke-opacity", 1)
         .each("end", function() { d3.select(this).style("stroke-opacity", null); });
 
-    d3.select(this).selectAll(".area")
-        .filter(function(d, i) { return i; })
-      .transition()
+    d3.select(this).selectAll(".area").transition()
         .duration(duration)
         .style("fill-opacity", 1e-6)
         .attr("d", area(d.values))
