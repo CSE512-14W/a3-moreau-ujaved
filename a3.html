@@ -21,12 +21,15 @@ svg {
 
 .axis text {
     font-family: sans-serif;
-    font-size: 12px;
+    font-size: 8px;
 }
 
 </style>
 <body>
-<p>Click on this text to do cool stuff!</p>
+<p id="usgross">Display movie US gross timeline!</p>
+<p id="wwgross">Display movie worldwide gross timeline!</p>
+<p id="imdb">Display movie IMDB ratings timeline!</p>
+<p id="tomatoes">Display movie Rotten Tomatoes ratings timeline!</p>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -41,8 +44,6 @@ var x,
     y,
     duration = 1500,
     delay = 500;
-
-var update = false;
 
 var color = d3.scale.category20c();
 
@@ -108,25 +109,26 @@ var stack;
 var genre2year2movies;
 var dates;
 var year2movies;
-d3.csv("movies.csv", function(data) {
+
+d3.csv("movies.csv", function (data) {
   dataset = [];
   dates = new Object();
   year2movies = new Object();
   data.forEach(function(d) {
-  var date = parseDate(d['Release Date']);
-  if (isValidDate(date) && isValidGenre(d['Major Genre'])) {
-        d.year = +date.getFullYear();
-        dates[d.year] = true;
-        dataset.push(d);
+    var date = parseDate(d['Release Date']);
+    if (isValidDate(date) && isValidGenre(d['Major Genre'])) {
+      d.year = +date.getFullYear();
+      dates[d.year] = true;
+      dataset.push(d);
 
-        if (!(d.year in year2movies))
-          year2movies[d.year] = [];
-        year2movies[d.year].push(d.Title);
-
+      if (!(d.year in year2movies))
+        year2movies[d.year] = [];
+      year2movies[d.year].push(d.Title);
     }
   });
 
   dates = d3.keys(dates);
+
   // Nest count values by genre.
   genre2year2movies = d3.nest()
       .key(function(d) { return d['Major Genre']; })
@@ -154,9 +156,6 @@ d3.csv("movies.csv", function(data) {
       y.count = y.values.length;
       y.TotalMovieCount = year2movies[y.key].length;
       y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
-      y.sumUSGross = d3.sum(y.values, function(d) { return +d['US Gross']; });
-      y.medianUSGross = d3.median(y.values, function(d) { return +d['US Gross']; });
-      y.meanUSGross = d3.mean(y.values, function(d) { return +d['US Gross']; });
 
       y.metric = y.relativeCount;
      }
@@ -167,19 +166,88 @@ d3.csv("movies.csv", function(data) {
   // Number of distinct genres 
   num_genres = genre2year2movies.length;
 
-  if (update == false) {
-    var g = svg.selectAll("g")
-        .data(genre2year2movies)
-      .enter().append("g")
-        .attr("class", "genre");
-    stackedArea();
-    update = false;
-  } else {
-    var g = svg.selectAll("g")
-        .data(genres)
-    updateAreas();
-  }
+  var g = svg.selectAll("g")
+      .data(genre2year2movies)
+    .enter().append("g")
+      .attr("class", "genre");
+
+  stackedArea();
 });
+
+
+//Decide what to do next
+d3.selectAll("p")
+    .on("click", function() {
+
+      // TODO: replace text with buttons/drop list
+
+      //See which p was clicked
+      var paragraphID = d3.select(this).attr("id");
+
+      if (paragraphID == "usgross") {
+        update('US Gross', 'sum');
+      } else if (paragraphID == "wwgross") {
+        update('Worldwide Gross', 'sum');
+      } else if (paragraphID == "imdb") {
+        update('IMDB Rating', 'sum');
+      } else if (paragraphID == "tomatoes") {
+        update('Rotten Tomatoes Rating', 'sum');
+      }
+    });
+
+
+function update(attribute, aggregate) {
+  
+  // Update data
+  genre2year2movies.forEach(function(g) {
+    g.values.forEach(function(y) {
+      y.count = y.values.length;
+      y.TotalMovieCount = year2movies[y.key].length;
+      y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
+      y.sum = d3.sum(y.values, function(d) { return +d[attribute]; });
+      y.median = d3.median(y.values, function(d) { return +d[attribute]; });
+      y.mean = d3.mean(y.values, function(d) { return +d[attribute]; });
+
+      // TODO1: set metric to appropriate aggregate!
+      // TODO2: normalize the aggregates!
+      y.metric = y.sum;
+     }
+    )
+    g.values.sort(function(y,z) { return y.key - z.key;});
+  });
+
+  // Update visualization
+  var stack = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.metric; })
+      .out(function(year, y0, y) { year.metric0 = y0; })
+      .order("reverse");
+
+  stack(genre2year2movies);
+
+  minY = 0
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.metric + y.metric0; });
+  });
+  y.domain([minY,maxY]);
+  y.range([h, 0]);
+
+  area
+      .y0(function(d) { return y(d.metric0); })
+      .y1(function(d) { return y(d.metric0 + d.metric); });
+
+  var t = svg.selectAll(".genre").transition()
+      .duration(duration)
+      .attr("transform", "translate(0,0)")
+      .each("end", function() { d3.select(this).attr("transform", null); });
+
+  t.select("path.area")
+      .attr("d", function(d) { return area(d.values); });
+
+  t.select("text")
+      .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.metric / 2 + d.metric0) + ")"; });
+}
 
 function stackedArea() {
 
@@ -250,39 +318,5 @@ function stackedArea() {
     .call(xAxis);
 }
 
-function updateAreas() {
-
-  var stack = d3.layout.stack()
-      .values(function(d) { return d.values; })
-      .x(function(d) { return d.date; })
-      .y(function(d) { return d.popularity; })
-      .out(function(d, y0, y) { d.popularity0 = y0; })
-      .order("reverse");
-
-  stack(genres);
-
-  y
-      .domain([0, d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))])
-      .range([h, 0]);
-
-  area
-      .y0(function(d) { return y(d.popularity0); })
-      .y1(function(d) { return y(d.popularity0 + d.popularity); });
-
-  var t = svg.selectAll(".genre").transition()
-      .duration(duration)
-      .attr("transform", "translate(0,0)")
-      .each("end", function() { d3.select(this).attr("transform", null); });
-
-  t.select("path.area")
-      .attr("d", function(d) { return area(d.values); });
-
-  t.select("path.line")
-      .style("stroke-opacity", function(d, i) { return i < 3 ? 1e-6 : 1; })
-      .attr("d", function(d) { return line(d.values); });
-
-  t.select("text")
-      .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.popularity / 2 + d.popularity0) + ")"; });
-}
 
 </script>
