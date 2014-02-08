@@ -208,7 +208,7 @@ d3.csv("movies.csv", function (data) {
     .enter().append("g")
       .attr("class", "genre");
 
-  console.log(genre2year2movies);
+  //console.log(genre2year2movies);
   stackedArea();
 });
 
@@ -283,13 +283,31 @@ d3.selectAll("p")
 function update(attribute, aggregate) {
   
   // Update data
+  var year2total = new Object();
+  year2genre2movies.forEach(function(y) {
+      var total = d3.sum(y.values, function(g) {
+        switch (aggregate) {
+          case 'sum':
+            return d3.sum(g.values, function(movie) { return ((+movie[attribute])*1.0); });
+          case 'median':
+            return d3.median(g.values, function(movie) { return ((+movie[attribute])*1.0); });
+          case 'mean':
+            return d3.mean(g.values, function(movie) { return ((+movie[attribute])*1.0); });
+        }
+      });
+
+     year2total[y.key] = total;
+  });
+
   genre2year2movies.forEach(function(g) {
-    g.values.forEach(function(y) {
-      
+    g.values.forEach(function(y) {    
       var unnormalized = getAttributeAggregate(y,attribute,aggregate);
-      //var total = getTotalAttributeAggregate(y,attribute,aggregate);
-      
-      y.metric = unnormalized;
+      //console.log(g.key + " " + y.key + " " + year2total[y.key]);
+      if (y.key in year2total)
+          y.metric = unnormalized/year2total[y.key];
+      else 
+          y.metric = 0.0;
+      //y.metric = unnormalized;
      });
   });
 
