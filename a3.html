@@ -27,7 +27,7 @@ svg {
 </style>
 <body>
 
-<p id="count">Display movie US gross count timeline!</p>
+<p id="count">Display movie count timeline!</p>
 
 <p id="usGrossSum">Display movie US gross sum timeline!</p>
 <p id="wwGrossSum">Display movie worldwide gross sum timeline!</p>
@@ -115,27 +115,30 @@ function isValidGenre(g) {
   return true;
 }
 
-function getAttributeSum(year, attribute) {
+function getAttributeAggregate(year, attribute, aggregate) {
 
-  //'attribute' is a string
-  return d3.sum(year.values, function(movie) { return ((+movie[attribute])*1.0); });
-}
-
-function getAttributeMedian(year, attribute) {
-
-  //'attribute' is a string
-  return d3.median(year.values, function(movie) { return ((+movie[attribute])*1.0); });
-}
-
-function getAttributeMean(year, attribute) {
-
-  //'attribute' is a string
-  return d3.mean(year.values, function(movie) { return ((+movie[attribute])*1.0); });
+  var r;
+  switch (aggregate) {
+    case 'sum':
+      r = d3.sum(year.values, function(movie) { return ((+movie[attribute])*1.0); });
+      break
+    case 'median':
+      r = d3.median(year.values, function(movie) { return ((+movie[attribute])*1.0); });
+      break;
+    case 'mean':
+      r = d3.mean(year.values, function(movie) { return ((+movie[attribute])*1.0); });
+      break;
+  }
+  if (r===undefined)
+      return 0.0;
+  return r;
+  
 }
 
 var dataset;
 var stack;
 var genre2year2movies;
+var year2genre2movies;
 var dates;
 var year2movies;
 
@@ -163,6 +166,11 @@ d3.csv("movies.csv", function (data) {
       .key(function(d) { return d['Major Genre']; })
       .key(function(d) { return d.year; })
       .entries(dataset);
+
+  year2genre2movies = d3.nest()
+      .key(function(d) { return d.year; })
+      .key(function(d) { return d['Major Genre']; })
+      .entries(dataset);
   
   genre2year2movies.forEach(function(g) {
     for (var i = 0; i < dates.length; i++) {
@@ -186,22 +194,6 @@ d3.csv("movies.csv", function (data) {
       y.TotalMovieCount = year2movies[y.key].length;
       y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
 
-      y.usGrossSum = getAttributeSum(y,"US Gross");
-      y.usGrossMedian = getAttributeMedian(y,"US Gross");
-      y.usGrossMean = getAttributeMean(y,"US Gross");
-
-      y.wwGrossSum = getAttributeSum(y,"Worldwide Gross");
-      y.wwGrossMedian = getAttributeMedian(y,"Worldwide Gross");
-      y.wwGrossMean = getAttributeMean(y,"Worldwide Gross");
-
-      y.imdbSum = getAttributeSum(y,"IMDB Rating");
-      y.imdbMedian = getAttributeMedian(y,"IMDB Rating");
-      y.imdbMean = getAttributeMean(y,"IMDB Rating");
-
-      y.tomatoesSum = getAttributeSum(y,"Rotten Tomatoes Rating");
-      y.tomatoesMedian = getAttributeMedian(y,"Rotten Tomatoes Rating");
-      y.tomatoesMean = getAttributeMean(y,"Rotten Tomatoes Rating");
-
       y.metric = y.relativeCount;
      }
     )
@@ -216,6 +208,7 @@ d3.csv("movies.csv", function (data) {
     .enter().append("g")
       .attr("class", "genre");
 
+  console.log(genre2year2movies);
   stackedArea();
 });
 
@@ -293,66 +286,10 @@ function update(attribute, aggregate) {
   genre2year2movies.forEach(function(g) {
     g.values.forEach(function(y) {
       
-      var chosen;
-      switch (attribute) {
-        case 'US Gross':
-          switch (aggregate) {
-            case 'sum':
-              chosen = y.usGrossSum;
-              break;
-            case 'median':
-              chosen = y.usGrossMedian;
-              break;
-            case 'mean':
-              chosen = y.usGrossMean;
-              break;
-          }
-          break;
-
-        case 'Worldwide Gross':
-          switch (aggregate) {
-            case 'sum':
-              chosen = y.wwGrossSum;
-              break;
-            case 'median':
-              chosen = y.wwGrossMedian;
-              break;
-            case 'mean':
-              chosen = y.wwGrossMean;
-              break;
-          }
-          break;
-
-        case 'IMDB Rating':
-          switch (aggregate) {
-            case 'sum':
-              chosen = y.imdbSum;
-              break;
-            case 'median':
-              chosen = y.imdbMedian;
-              break;
-            case 'mean':
-              chosen = y.imdbMean;
-              break;
-          }
-          break;
-
-        case 'Rotten Tomatoes Rating':
-          switch (aggregate) {
-            case 'sum':
-              chosen = y.tomatoesSum;
-              break;
-            case 'median':
-              chosen = y.tomatoesMedian;
-              break;
-            case 'mean':
-              chosen = y.tomatoesMean;
-              break;
-          }
-          break;
-      }
-
-      y.metric = chosen;
+      var unnormalized = getAttributeAggregate(y,attribute,aggregate);
+      //var total = getTotalAttributeAggregate(y,attribute,aggregate);
+      
+      y.metric = unnormalized;
      });
   });
 
