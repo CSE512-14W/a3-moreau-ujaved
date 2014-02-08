@@ -83,7 +83,7 @@ function parseDate(d) {
 
 function isValidDate(d) {
   //d is in Date format
-  var maxDate = d3.time.format("%Y-%m-%d").parse("2014-01-01");
+  var maxDate = d3.time.format("%Y-%m-%d").parse("2010-01-01");
   var minDate = d3.time.format("%Y-%m-%d").parse("1980-01-01");
   if ((d==null) || ((+d) > (+maxDate)) || ((+d) < (+minDate))) {
     return false;
@@ -102,6 +102,7 @@ var dataset;
 var stack;
 var genre2year2movies;
 var dates;
+var year2movies;
 d3.csv("movies.csv", function(data) {
   dataset = [];
   dates = new Object();
@@ -145,11 +146,12 @@ d3.csv("movies.csv", function(data) {
       y.meanUSGross = d3.mean(y.values, function(d) { return +d['US Gross']; });
      }
     )
-    g.maxCount = d3.max(g.values, function(y) { return y.count; });
+    g.values.sort(function(y,z) { return y.key - z.key;});
+    //g.maxCount = d3.max(g.values, function(y) { return y.count; });
   });
 
   // Sort by maximum count, descending.
-  //genre2year2movies.sort(function(g, f) { return b.maxCount - a.maxCount; });
+  //genre2year2movies.sort(function(g, f) { return g.maxCount - f.maxCount; });
 
   // Number of distinct genres 
   num_genres = genre2year2movies.length;
@@ -183,11 +185,13 @@ function stackedArea() {
    });
   x.domain([minX,maxX]);
 
+  /*
   genre2year2movies.forEach(function(g) {
     g.values.forEach(function(y) {
-      console.log(x(y.key));
+      console.log(y.key + " " + x(y.key));
   });
   });
+*/
   minY = 0
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.count + y.count0; });
