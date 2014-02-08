@@ -60,99 +60,153 @@ var num_genres;
 // A line generator, for the dark stroke.
 var line = d3.svg.line()
     .interpolate("basis")
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.popularity); });
+    .x(function(d) { return x(d.key); })
+    .y(function(d) { return y(d.count); });
 
 // A line generator, for the dark stroke.
 var axis = d3.svg.line()
     .interpolate("basis")
-    .x(function(d) { return x(d.date); })
+    .x(function(d) { return x(d.key); })
     .y(h);
 
 // A area generator, for the dark stroke.
 var area = d3.svg.area()
     .interpolate("basis")
-    .x(function(d) { return x(d.date); })
-    .y1(function(d) { return y(d.popularity); });
+    .x(function(d) { return x(d.key); })
+    .y1(function(d) { return y(d.count); });
 
-d3.csv("genre_popularity.csv", processCSV);
+function parseDate(d) {
+  var parser = d3.time.format("%d-%b-%y").parse;
+  if (parser(d) == null) {
+    parser = d3.time.format("%B, %Y").parse;
+  }
+  if (parser(d) == null) {
+    parser = d3.time.format("%Y").parse;
+  }
+  return parser(d);
+};
 
-d3.select("p")
-  .on("click", function() {
-    d3.csv("genre_gross.csv", processCSV);
+function isValidDate(d) {
+  //d is in Date format
+  var maxDate = d3.time.format("%Y-%m-%d").parse("2010-01-01");
+  var minDate = d3.time.format("%Y-%m-%d").parse("1980-01-01");
+  if ((d==null) || ((+d) > (+maxDate)) || ((+d) < (+minDate))) {
+    return false;
+  }
+  return true;
+}
+
+function isValidGenre(g) {
+  if (g==null || g.length===0) {
+    return false;
+  }
+  return true;
+}
+
+var dataset;
+var stack;
+var genre2year2movies;
+var dates;
+var year2movies;
+d3.csv("movies.csv", function(data) {
+  dataset = [];
+  dates = new Object();
+  data.forEach(function(d) {
+  var date = parseDate(d['Release Date']);
+  if (isValidDate(date) && isValidGenre(d['Major Genre'])) {
+        d.year = +date.getFullYear();
+        dates[d.year] = true;
+        dataset.push(d);
+      }
+    });
+
+  dates = d3.keys(dates);
+
+  // Nest count values by genre.
+  genre2year2movies = d3.nest()
+      .key(function(d) { return d['Major Genre']; })
+      .key(function(d) { return d.year; })
+      .entries(dataset);
+  
+  genre2year2movies.forEach(function(g) {
+    for (var i = 0; i < dates.length; i++) {
+      d = dates[i];
+      var exists = false;
+      for (var j = 0; j < g.values.length; j++) {
+        if (g.values[j].key==d) {
+          exists = true;
+          break;
+        }
+      }
+      if (!exists) {
+        var nullYear = new Object();
+        nullYear.key = d;
+        nullYear.values = [];
+        g.values.push(nullYear);
+      }
+    }
+    g.values.forEach(function(y) {
+      y.count = y.values.length;
+      y.sumUSGross = d3.sum(y.values, function(d) { return +d['US Gross']; });
+      y.medianUSGross = d3.median(y.values, function(d) { return +d['US Gross']; });
+      y.meanUSGross = d3.mean(y.values, function(d) { return +d['US Gross']; });
+     }
+    )
+    g.values.sort(function(y,z) { return y.key - z.key;});
   });
-
-
-function processCSV(data) {
-  var parse = d3.time.format("%Y").parse;
-
-  // Nest popularity values by genre.
-  genres = d3.nest()
-      .key(function(d) { return d.genre; })
-      .entries(stocks = data);
-
-  // Parse dates and numbers. We assume values are sorted by date.
-  // Also compute the maximum popularity per genre, needed for the y-domain.
-  genres.forEach(function(s) {
-    s.values.forEach(function(d) { d.date = parse(d.date); d.popularity = +d.popularity; });
-    s.maxpopularity = d3.max(s.values, function(d) { return d.popularity; });
-    s.sumpopularity = d3.sum(s.values, function(d) { return d.popularity; });
-  });
-
-  // Sort by maximum popularity, descending.
-  //genres.sort(function(a, b) { return b.maxpopularity - a.maxpopularity; });
 
   // Number of distinct genres 
-  num_genres = genres.length;
-
+  num_genres = genre2year2movies.length;
 
   if (update == false) {
     var g = svg.selectAll("g")
-        .data(genres)
+        .data(genre2year2movies)
       .enter().append("g")
         .attr("class", "genre");
     stackedArea();
-    update = true;
+    update = false;
   } else {
     var g = svg.selectAll("g")
         .data(genres)
     updateAreas();
   }
-}
+});
 
 function stackedArea() {
+
+  var stack = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.count; })
+      .out(function(year, y0, y) { year.count0 = y0; })
+      .order("reverse");
+
+  stack(genre2year2movies);
 
   x = d3.time.scale().range([0, w - w_margin]);
   y = d3.scale.linear().range([h, 0]);
 
-  // Compute the minimum and maximum date across genres.
-  x.domain([
-    d3.min(genres, function(d) { return d.values[0].date; }),
-    d3.max(genres, function(d) { return d.values[d.values.length - 1].date; })
-  ]);
-  // Compute the minimum and maximum total popularity.
-  y.domain([
-    0, 
-    d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))
-  ])
+  minX = d3.min(genre2year2movies, function(g) {
+      return d3.min(g.values, function(y) { return y.key; });
+   });
+  maxX = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.key; });
+   });
+  x.domain([minX,maxX]);
 
-  var stack = d3.layout.stack()
-      .values(function(d) { return d.values; })
-      .x(function(d) { return d.date; })
-      .y(function(d) { return d.popularity; })
-      .out(function(d, y0, y) { d.popularity0 = y0; })
-      .order("reverse");
-
-  stack(genres);
+  minY = 0
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.count + y.count0; });
+   });
+  y.domain([minY,maxY]);
 
   var g = svg.selectAll(".genre");
 
   area
-      .y0(function(d) { return y(d.popularity0); })
-      .y1(function(d) { return y(d.popularity0 + d.popularity); });
+      .y0(function(d) { return y(d.count0); })
+      .y1(function(d) { return y(d.count0 + d.count); });
 
   g.each(function(d) {
-    y.domain([0, d3.max(genres[0].values.map(function(d) { return d.popularity + d.popularity0; }))]);
 
     d3.select(this).selectAll(".area")
         .data(d3.range(3))
@@ -169,7 +223,7 @@ function stackedArea() {
         .text(d.key)
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
-        .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.popularity / 2 + d.popularity0))+5.5) + ")"; });
+        .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.count / 2 + d.count0))+5.5) + ")"; });
   });
 
   g.select("path.area")
