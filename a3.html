@@ -61,7 +61,7 @@ var num_genres;
 var line = d3.svg.line()
     .interpolate("basis")
     .x(function(d) { return x(d.key); })
-    .y(function(d) { return y(d.count); });
+    .y(function(d) { return y(d.metric); });
 
 // A line generator, for the dark stroke.
 var axis = d3.svg.line()
@@ -73,7 +73,7 @@ var axis = d3.svg.line()
 var area = d3.svg.area()
     .interpolate("basis")
     .x(function(d) { return x(d.key); })
-    .y1(function(d) { return y(d.count); });
+    .y1(function(d) { return y(d.metric); });
 
 function parseDate(d) {
   var parser = d3.time.format("%d-%b-%y").parse;
@@ -111,17 +111,22 @@ var year2movies;
 d3.csv("movies.csv", function(data) {
   dataset = [];
   dates = new Object();
+  year2movies = new Object();
   data.forEach(function(d) {
   var date = parseDate(d['Release Date']);
   if (isValidDate(date) && isValidGenre(d['Major Genre'])) {
         d.year = +date.getFullYear();
         dates[d.year] = true;
         dataset.push(d);
-      }
-    });
+
+        if (!(d.year in year2movies))
+          year2movies[d.year] = [];
+        year2movies[d.year].push(d.Title);
+
+    }
+  });
 
   dates = d3.keys(dates);
-
   // Nest count values by genre.
   genre2year2movies = d3.nest()
       .key(function(d) { return d['Major Genre']; })
@@ -147,9 +152,13 @@ d3.csv("movies.csv", function(data) {
     }
     g.values.forEach(function(y) {
       y.count = y.values.length;
+      y.TotalMovieCount = year2movies[y.key].length;
+      y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
       y.sumUSGross = d3.sum(y.values, function(d) { return +d['US Gross']; });
       y.medianUSGross = d3.median(y.values, function(d) { return +d['US Gross']; });
       y.meanUSGross = d3.mean(y.values, function(d) { return +d['US Gross']; });
+
+      y.metric = y.relativeCount;
      }
     )
     g.values.sort(function(y,z) { return y.key - z.key;});
@@ -177,8 +186,8 @@ function stackedArea() {
   var stack = d3.layout.stack()
       .values(function(genre) { return genre.values; })
       .x(function(year) { return year.key; })
-      .y(function(year) { return year.count; })
-      .out(function(year, y0, y) { year.count0 = y0; })
+      .y(function(year) { return year.metric; })
+      .out(function(year, y0, y) { year.metric0 = y0; })
       .order("reverse");
 
   stack(genre2year2movies);
@@ -196,15 +205,15 @@ function stackedArea() {
 
   minY = 0
   maxY = d3.max(genre2year2movies, function(g) {
-      return d3.max(g.values, function(y) { return y.count + y.count0; });
+      return d3.max(g.values, function(y) { return y.metric + y.metric0; });
    });
   y.domain([minY,maxY]);
 
   var g = svg.selectAll(".genre");
 
   area
-      .y0(function(d) { return y(d.count0); })
-      .y1(function(d) { return y(d.count0 + d.count); });
+      .y0(function(d) { return y(d.metric0); })
+      .y1(function(d) { return y(d.metric0 + d.metric); });
 
   g.each(function(d) {
 
@@ -223,7 +232,7 @@ function stackedArea() {
         .text(d.key)
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
-        .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.count / 2 + d.count0))+5.5) + ")"; });
+        .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.metric / 2 + d.metric0))+5.5) + ")"; });
   });
 
   g.select("path.area")
