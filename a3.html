@@ -100,7 +100,7 @@ function parseDate(d) {
 
 function isValidDate(d) {
   //d is in Date format
-  var maxDate = d3.time.format("%Y-%m-%d").parse("2010-01-01");
+  var maxDate = d3.time.format("%Y-%m-%d").parse("2010-12-31");
   var minDate = d3.time.format("%Y-%m-%d").parse("1980-01-01");
   if ((d==null) || ((+d) > (+maxDate)) || ((+d) < (+minDate))) {
     return false;
@@ -449,7 +449,8 @@ function stackedArea() {
   var xAxis = d3.svg.axis()
                   .scale(x)
                   .orient("bottom")
-                  .ticks(5); 
+                  .tickFormat(d3.format(".0f"))
+                  .ticks(7); 
 
   //Create X axis
   svg.append("g")
