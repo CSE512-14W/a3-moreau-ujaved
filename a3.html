@@ -27,24 +27,30 @@ svg {
 </style>
 <body>
 
-<p id="count">Display movie count timeline!</p>
-
-<p id="usGrossSum">Display movie US gross sum timeline!</p>
-<p id="wwGrossSum">Display movie worldwide gross sum timeline!</p>
-<p id="imdbSum">Display movie IMDB ratings sum timeline!</p>
-<p id="tomatoesSum">Display movie Rotten Tomatoes ratings sum timeline!</p>
-
-<p id="usGrossMedian">Display movie US gross median timeline!</p>
-<p id="wwGrossMedian">Display movie worldwide gross median timeline!</p>
-<p id="imdbMedian">Display movie IMDB ratings median timeline!</p>
-<p id="tomatoesMedian">Display movie Rotten Tomatoes ratings median timeline!</p>
-
-<p id="usGrossMean">Display movie US gross mean timeline!</p>
-<p id="wwGrossMean">Display movie worldwide gross mean timeline!</p>
-<p id="imdbMean">Display movie IMDB ratings mean timeline!</p>
-<p id="tomatoesMean">Display movie Rotten Tomatoes ratings mean timeline!</p>
-
 <script src="http://d3js.org/d3.v3.min.js"></script>
+
+<aside style="margin-top:80px;">
+<p>Metric: <select id="metric">
+  <option value="count">Movie Count</option>
+  <option value="usGross">US Gross</option>
+  <option value="wwGross">Worldwide Gross</option>
+  <option value="imdb">IMDB Rating</option>
+  <option value="tomatoes">Rotten Tomatoes Rating</option>
+</select>
+
+<p>Aggregate: <select id="agg">
+  <option value="sum">Sum</option>
+  <option value="median">Median</option>
+  <option value="mean">Mean</option>
+</select>
+
+<p>Movie dataset.
+
+<p>Use the drop-down menu to reorder the matrix and explore the data.
+
+<p>Built with <a href="http://d3js.org/">d3.js</a>.
+</aside>
+
 <script>
 
 var m = [20, 30, 30, 20],
@@ -212,73 +218,36 @@ d3.csv("movies.csv", function (data) {
   stackedArea();
 });
 
-
-//Decide what to do next
-d3.selectAll("p")
-    .on("click", function() {
-
-      // TODO: replace text with buttons/drop list
-
-      //See which p was clicked
-      var paragraphID = d3.select(this).attr("id");
-
-      switch (paragraphID) {
-
-        case "count":
+d3.select("#metric").on("change", function() {
+    //clearTimeout(timeout);
+    var agg = d3.select("#agg").node().value;
+    switch (this.value) {
+      case "count":
+          genre2year2movies.forEach(function(g) {
+            g.values.forEach(function(y) {    
+              y.metric = y.relativeCount;
+            });
+          });
           break;
 
-        case "usGrossSum":
-          updateData('US Gross', 'sum');
+      case "usGross":
+          updateData('US Gross', agg);
           break;
 
-        case "usGrossMedian":
-          updateData('US Gross', 'median');
-          break;  
-
-        case "usGrossMean":
-          updateData('US Gross', 'mean');
+      case "wwGross":
+          updateData('Worldwide Gross', agg);
           break;
 
-        case "wwGrossSum":
-          updateData('Worldwide Gross', 'sum');
+      case "imdb":
+          updateData('IMDB Rating', agg);
           break;
 
-        case "wwGrossMedian":
-          updateData('Worldwide Gross', 'median');
-          break;  
-
-        case "wwGrossMean":
-          updateData('Worldwide Gross', 'mean');
+      case "tomatoes":
+          updateData('Rotten Tomatoes Rating', agg);
           break;
-
-        case "imdbSum":
-          updateData('IMDB Rating', 'sum');
-          break;
-
-        case "imdbMedian":
-          updateData('IMDB Rating', 'median');
-          break;  
-
-        case "imdbMean":
-          updateData('IMDB Rating', 'mean');
-          break;
-
-        case "tomatoesSum":
-          update('Rotten Tomatoes Rating', 'sum');
-          break;
-
-        case "tomatoesMedian":
-          update('Rotten Tomatoes Rating', 'median');
-          break;  
-
-        case "tomatoesMean":
-          update('Rotten Tomatoes Rating', 'mean');
-          break;
-      }
-      updateStackedArea();
-      
-    });
-
+    }
+    updateStackedArea();
+  });
 
 function updateData(attribute, aggregate) {
   
@@ -415,6 +384,5 @@ function stackedArea() {
     .attr("transform", "translate(" + 0 + " ," + (h) + ")")
     .call(xAxis);
 }
-
 
 </script>
