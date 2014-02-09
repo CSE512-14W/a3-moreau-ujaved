@@ -385,9 +385,24 @@ function stackedArea() {
         .data(d3.range(3))
       .enter().insert("path", ".line")
       .filter(function(d, i) { return !i; })
-        .attr("class", "area")
-        .attr("d", area(d.values))
-        .style("fill", color(d.key));
+      .attr("class", "area")
+      .attr("d", area(d.values))
+      .on("mouseover", function(d) { 
+        var curColor = this.style.fill;
+        var newColor = Darken(curColor,0.5);
+        d3.select(this)
+          .transition()
+          .duration(250)
+          .style("fill", newColor);
+      })
+      .on("mouseout", function(d) {
+        d3.select(this)
+          .transition()
+          .duration(250)
+          .style("fill", color(d.key));
+      })
+      .style("fill", color(d.key));
+
 
     d3.select(this).append("text")
         .attr("x", (w - w_margin))
@@ -414,5 +429,47 @@ function stackedArea() {
     .attr("transform", "translate(" + 0 + " ," + (h) + ")")
     .call(xAxis);
 }
+
+function Darken(hexColor, factor)
+    {   
+        if ( factor < 0 ) factor = 0;
+
+        var c = hexColor;
+        if ( c.substr(0,1) == "#" )
+        {
+            c = c.substring(1);
+        }
+
+        if ( c.length == 3 || c.length == 6 )
+        {
+            var i = c.length / 3;
+
+            var f;  // the relative distance from white
+
+            var r = parseInt( c.substr(0, i ), 16 );
+            f = ( factor * r / (256-r) );
+            r = Math.floor((256 * f) / (f+1));
+
+            r = r.toString(16);
+            if ( r.length == 1 ) r = "0" + r;
+
+            var g = parseInt( c.substr(i, i), 16);
+            f = ( factor * g / (256-g) );
+            g = Math.floor((256 * f) / (f+1));
+            g = g.toString(16);
+            if ( g.length == 1 ) g = "0" + g;
+
+            var b = parseInt( c.substr( 2*i, i),16 );
+            f = ( factor * b / (256-b) );
+            b = Math.floor((256 * f) / (f+1));
+            b = b.toString(16);
+            if ( b.length == 1 ) b = "0" + b;
+
+            c =  r+g+b;
+         }   
+
+         return "#" + c;
+
+    }
 
 </script>
