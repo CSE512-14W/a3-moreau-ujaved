@@ -18,44 +18,30 @@ svg {
     stroke: none;
     shape-rendering: crispEdges;
 }
-
 .axis text {
-    font-family: sans-serif;
-    font-size: 8px;
+    font-family: Helvetica;
+    font-size: 10px;
 }
 
 </style>
 <body>
 
-<p id="count">Display movie US gross count timeline!</p>
-
-<p id="usGrossSum">Display movie US gross sum timeline!</p>
-<p id="wwGrossSum">Display movie worldwide gross sum timeline!</p>
-<p id="imdbSum">Display movie IMDB ratings sum timeline!</p>
-<p id="tomatoesSum">Display movie Rotten Tomatoes ratings sum timeline!</p>
-
-<p id="usGrossMedian">Display movie US gross median timeline!</p>
-<p id="wwGrossMedian">Display movie worldwide gross median timeline!</p>
-<p id="imdbMedian">Display movie IMDB ratings median timeline!</p>
-<p id="tomatoesMedian">Display movie Rotten Tomatoes ratings median timeline!</p>
-
-<p id="usGrossMean">Display movie US gross mean timeline!</p>
-<p id="wwGrossMean">Display movie worldwide gross mean timeline!</p>
-<p id="imdbMean">Display movie IMDB ratings mean timeline!</p>
-<p id="tomatoesMean">Display movie Rotten Tomatoes ratings mean timeline!</p>
-
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-var m = [20, 30, 30, 20],
-    w = 960 - m[1] - m[3],
-    h = 500 - m[0] - m[2];
+var m  = [10, 40, 100, 10],
+    m2 = [430, m[1], 20, m[3]],
+    w  = 960 - m[1] - m[3],
+    h  = 500 - m[0] - m[2],
+    h2 = 500 - m2[0] - m2[2];
 
-var w_margin = 80,
-    h_margin = 20;
+var w_margin = m[1] + m[3],
+    h_margin = m[0] + m[2];
 
-var x,
-    y,
+var x = d3.time.scale().range([0, w - w_margin]),
+    y = d3.scale.linear().range([h, 0]),
+    x2 = d3.time.scale().range([0, w - w_margin]),
+    y2 = d3.scale.linear().range([h2, 0]),
     duration = 1500,
     delay = 500;
 
@@ -63,29 +49,28 @@ var color = d3.scale.category20c();
 
 var svg = d3.select("body").append("svg")
     .attr("width", w + m[1] + m[3])
-    .attr("height", h + m[0] + m[2])
-  .append("g")
+    .attr("height", h + m[0] + m[2]);
+var focus = svg.append("g")
+    .attr("class", "focus")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+var context = svg.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(" + m2[3] + "," + m2[0] + ")");
 
-var num_genres;
-
-// A line generator, for the dark stroke.
-var line = d3.svg.line()
-    .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y(function(d) { return y(d.metric); });
-
-// A line generator, for the dark stroke.
-var axis = d3.svg.line()
-    .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y(h);
+// X axis
+var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom")
+                .tickFormat(d3.format(".0f"));
 
 // A area generator, for the dark stroke.
 var area = d3.svg.area()
-    .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y1(function(d) { return y(d.metric); });
+    .interpolate("monotone")
+    .x(function(d) { return x(d.key); });
+
+var area2 = d3.svg.area()
+    .interpolate("monotone")
+    .x(function(d) { return x2(d.key); });
 
 function parseDate(d) {
   var parser = d3.time.format("%d-%b-%y").parse;
@@ -133,6 +118,7 @@ function getAttributeMean(year, attribute) {
   return d3.mean(year.values, function(movie) { return ((+movie[attribute])*1.0); });
 }
 
+var num_genres;
 var dataset;
 var stack;
 var genre2year2movies;
@@ -366,24 +352,28 @@ function update(attribute, aggregate) {
 
   stack(genre2year2movies);
 
-  minY = 0
+  // Update the y axis domain
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
   });
-  y.domain([minY,maxY]);
-  y.range([h, 0]);
+  y.domain([0, maxY]);
+  y2.domain([0, maxY]);
 
   area
       .y0(function(d) { return y(d.metric0); })
       .y1(function(d) { return y(d.metric0 + d.metric); });
+
+  area2
+      .y0(function(d) { return y2(d.metric0); })
+      .y1(function(d) { return y2(d.metric0 + d.metric); });
 
   var t = svg.selectAll(".genre").transition()
       .duration(duration)
       .attr("transform", "translate(0,0)")
       .each("end", function() { d3.select(this).attr("transform", null); });
 
-  t.select("path.area")
-      .attr("d", function(d) { return area(d.values); });
+  //t.select("path.area")
+  //    .attr("d", function(d) { return area(d.values); });
 
   t.select("text")
       .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.metric / 2 + d.metric0) + ")"; });
@@ -400,9 +390,7 @@ function stackedArea() {
 
   stack(genre2year2movies);
 
-  x = d3.time.scale().range([0, w - w_margin]);
-  y = d3.scale.linear().range([h, 0]);
-
+  // Update domains
   minX = d3.min(genre2year2movies, function(g) {
       return d3.min(g.values, function(y) { return y.key; });
    });
@@ -410,12 +398,13 @@ function stackedArea() {
       return d3.max(g.values, function(y) { return y.key; });
    });
   x.domain([minX,maxX]);
+  x2.domain([minX,maxX]);
 
-  minY = 0
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
    });
-  y.domain([minY,maxY]);
+  y.domain([0, maxY]);
+  y2.domain([0, maxY]);
 
   var g = svg.selectAll(".genre");
 
@@ -423,40 +412,44 @@ function stackedArea() {
       .y0(function(d) { return y(d.metric0); })
       .y1(function(d) { return y(d.metric0 + d.metric); });
 
+  area2
+      .y0(function(d) { return y2(d.metric0); })
+      .y1(function(d) { return y2(d.metric0 + d.metric); });
+
   g.each(function(d) {
 
-    d3.select(this).selectAll(".area")
-        .data(d3.range(3))
-      .enter().insert("path", ".line")
-      .filter(function(d, i) { return !i; })
-        .attr("class", "area")
-        .attr("d", area(d.values))
-        .style("fill", color(d.key));
+    focus.append("path")
+      .data(d3.range(3))
+      .attr("class", "area")
+      .attr("d", area(d.values))
+      .style("fill", color(d.key));
+
+    focus.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + h + ")")
+      .call(xAxis);
+
+    context.append("path")
+      .data(d3.range(3))
+      .attr("class", "area")
+      .attr("d", area2(d.values))
+      .style("fill", color("teal"));
+
+    context.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + h2 + ")")
+      .call(xAxis);
 
     d3.select(this).append("text")
-        .attr("x", (w - w_margin))
+        .attr("x", (w - m[1]))
         .attr("dx", 4)
-        .attr("dy", -2)
+        .attr("dy", 0)
         .text(d.key)
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
         .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.metric / 2 + d.metric0))+5.5) + ")"; });
   });
 
-  g.select("path.area")
-      .attr("d", function(d) { return area(d.values); });
-
-  var xAxis = d3.svg.axis()
-                  .scale(x)
-                  .orient("bottom")
-                  .tickFormat(d3.format(".0f"))
-                  .ticks(7); 
-
-  //Create X axis
-  svg.append("g")
-    .attr("class", "axis")
-    .attr("transform", "translate(" + 0 + " ," + (h) + ")")
-    .call(xAxis);
 }
 
 
