@@ -225,43 +225,42 @@ d3.selectAll("p")
       switch (paragraphID) {
 
         case "count":
-          update('Count', '');
           break;
 
         case "usGrossSum":
-          update('US Gross', 'sum');
+          updateData('US Gross', 'sum');
           break;
 
         case "usGrossMedian":
-          update('US Gross', 'median');
+          updateData('US Gross', 'median');
           break;  
 
         case "usGrossMean":
-          update('US Gross', 'mean');
+          updateData('US Gross', 'mean');
           break;
 
         case "wwGrossSum":
-          update('Worldwide Gross', 'sum');
+          updateData('Worldwide Gross', 'sum');
           break;
 
         case "wwGrossMedian":
-          update('Worldwide Gross', 'median');
+          updateData('Worldwide Gross', 'median');
           break;  
 
         case "wwGrossMean":
-          update('Worldwide Gross', 'mean');
+          updateData('Worldwide Gross', 'mean');
           break;
 
         case "imdbSum":
-          update('IMDB Rating', 'sum');
+          updateData('IMDB Rating', 'sum');
           break;
 
         case "imdbMedian":
-          update('IMDB Rating', 'median');
+          updateData('IMDB Rating', 'median');
           break;  
 
         case "imdbMean":
-          update('IMDB Rating', 'mean');
+          updateData('IMDB Rating', 'mean');
           break;
 
         case "tomatoesSum":
@@ -276,11 +275,12 @@ d3.selectAll("p")
           update('Rotten Tomatoes Rating', 'mean');
           break;
       }
+      updateStackedArea();
       
     });
 
 
-function update(attribute, aggregate) {
+function updateData(attribute, aggregate) {
   
   // Update data
   var year2total = new Object();
@@ -310,7 +310,9 @@ function update(attribute, aggregate) {
       //y.metric = unnormalized;
      });
   });
+}
 
+function updateStackedArea() {
   // Update visualization
   var stack = d3.layout.stack()
       .values(function(genre) { return genre.values; })
