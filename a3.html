@@ -247,7 +247,37 @@ d3.select("#metric").on("change", function() {
           break;
     }
     updateStackedArea();
-  });
+});
+
+d3.select("#agg").on("change", function() {
+    //clearTimeout(timeout);
+    var m = d3.select("#metric").node().value;
+    var metric;
+    switch (m) {
+      case 'usGross':
+        metric = 'US Gross';
+      case 'wwGross':
+        metric = 'Worldwide Gross';
+      case 'imdb':
+        metric = 'IMDB Rating';
+      case 'tomatoes':
+        metric = 'Rotten Tomatoes Rating';
+    }
+    switch (this.value) {
+      case 'sum':
+          updateData(metric, 'sum');
+          break;
+
+      case 'median':
+          updateData(metric, 'median');
+          break;
+
+      case 'mean':
+          updateData(metric, 'mean');
+          break;
+    }
+    updateStackedArea();
+});
 
 function updateData(attribute, aggregate) {
   
