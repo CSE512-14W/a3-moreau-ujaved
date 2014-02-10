@@ -28,8 +28,8 @@ svg {
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
-<aside style="margin-top:80px;">
-<p>Metric: <select id="metric">
+<aside style="margin-top:50px;">
+<p>Attribute: <select id="metric">
   <option value="count">Movie Count</option>
   <option value="usGross">US Gross</option>
   <option value="wwGross">Worldwide Gross</option>
@@ -43,17 +43,12 @@ svg {
   <option value="mean">Mean</option>
 </select>
 
-<p>Movie dataset.
-
-<p>Use the drop-down menu to reorder the matrix and explore the data.
-
-<p>Built with <a href="http://d3js.org/">d3.js</a>.
 </aside>
 
 <script>
 
-var m  = [10, 40, 100, 10],
-    m2 = [430, m[1], 20, m[3]],
+var m  = [10, 50, 100, 10],
+    m2 = [400, m[1], 20, m[3]],
     w  = 960 - m[1] - m[3],
     h  = 500 - m[0] - m[2],
     h2 = 500 - m2[0] - m2[2];
@@ -70,30 +65,32 @@ var x = d3.time.scale().range([0, w - w_margin]),
 
 var color = d3.scale.category20c();
 
-var svg = d3.select("body").append("svg")
-    .attr("width", w + m[1] + m[3])
-    .attr("height", h + m[0] + m[2]);
-var focus = svg.append("g")
-    .attr("class", "focus")
-    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
-var context = svg.append("g")
-    .attr("class", "context")
-    .attr("transform", "translate(" + m2[3] + "," + m2[0] + ")");
-
 // X axis
 var xAxis = d3.svg.axis()
                 .scale(x)
                 .orient("bottom")
                 .tickFormat(d3.format(".0f"));
 
-// A area generator, for the dark stroke.
+// A area generator
 var area = d3.svg.area()
-    .interpolate("monotone")
+    .interpolate("basis")
     .x(function(d) { return x(d.key); });
 
 var area2 = d3.svg.area()
     .interpolate("monotone")
     .x(function(d) { return x2(d.key); });
+
+var fcs = d3.select("body").append("svg")
+    .attr("width", w + m[1] + m[3])
+    .attr("height", h + m[0] + m[2] - h2)
+    .append("g")
+      .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+var ctx = d3.select("body").append("svg")
+    .attr("width", w + m2[1] + m2[3])
+    .attr("height", h2 + m2[0] + m2[2] - h)
+    .append("g")
+      .attr("transform", "translate(" + m2[3] + "," + 0 + ")");
 
 function parseDate(d) {
   var parser = d3.time.format("%d-%b-%y").parse;
@@ -212,12 +209,16 @@ d3.csv("movies.csv", function (data) {
   // Number of distinct genres 
   num_genres = genre2year2movies.length;
 
-  var g = svg.selectAll("g")
+  var g = fcs.selectAll("g")
       .data(genre2year2movies)
     .enter().append("g")
       .attr("class", "genre");
 
-  //console.log(genre2year2movies);
+  var g2 = ctx.selectAll("g")
+      .data(genre2year2movies)
+    .enter().append("g")
+      .attr("class", "genre");
+
   stackedArea();
 });
 
@@ -304,12 +305,10 @@ function updateData(attribute, aggregate) {
   genre2year2movies.forEach(function(g) {
     g.values.forEach(function(y) {    
       var unnormalized = getAttributeAggregate(y,attribute,aggregate);
-      //console.log(g.key + " " + y.key + " " + year2total[y.key]);
       if (y.key in year2total)
           y.metric = unnormalized/year2total[y.key];
       else 
           y.metric = 0.0;
-      //y.metric = unnormalized;
      });
   });
 }
@@ -340,16 +339,24 @@ function updateStackedArea() {
       .y0(function(d) { return y2(d.metric0); })
       .y1(function(d) { return y2(d.metric0 + d.metric); });
 
-  var t = svg.selectAll(".genre").transition()
+  var t = fcs.selectAll(".genre").transition()
       .duration(duration)
       .attr("transform", "translate(0,0)")
       .each("end", function() { d3.select(this).attr("transform", null); });
 
-  //t.select("path.area")
-  //    .attr("d", function(d) { return area(d.values); });
+  t.select("path.area")
+      .attr("d", function(d) { return area(d.values); });
 
   t.select("text")
       .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.metric / 2 + d.metric0) + ")"; });
+
+  var t2 = ctx.selectAll(".genre").transition()
+      .duration(duration)
+      .attr("transform", "translate(0,0)")
+      .each("end", function() { d3.select(this).attr("transform", null); });
+
+  t2.select("path.area")
+      .attr("d", function(d) { return area2(d.values); });
 }
 
 function stackedArea() {
@@ -379,7 +386,9 @@ function stackedArea() {
   y.domain([0, maxY]);
   y2.domain([0, maxY]);
 
-  var g = svg.selectAll(".genre");
+  var g = fcs.selectAll(".genre");
+
+  var g2 = ctx.selectAll(".genre");
 
   area
       .y0(function(d) { return y(d.metric0); })
@@ -391,27 +400,12 @@ function stackedArea() {
 
   g.each(function(d) {
 
-    focus.append("path")
+    d3.select(this).selectAll(".area")
       .data(d3.range(3))
+      .enter().insert("path")
       .attr("class", "area")
       .attr("d", area(d.values))
       .style("fill", color(d.key));
-
-    focus.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0," + h + ")")
-      .call(xAxis);
-
-    context.append("path")
-      .data(d3.range(3))
-      .attr("class", "area")
-      .attr("d", area2(d.values))
-      .style("fill", color("teal"));
-
-    context.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0," + h2 + ")")
-      .call(xAxis);
 
     d3.select(this).append("text")
         .attr("x", (w - m[1]))
@@ -422,6 +416,33 @@ function stackedArea() {
         .attr("font-size", "11px")
         .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.metric / 2 + d.metric0))+5.5) + ")"; });
   });
+
+  g2.each(function(d) {
+
+    d3.select(this).selectAll(".area")
+      .data(d3.range(3))
+      .enter().insert("path")
+      .attr("class", "area")
+      .attr("d", area2(d.values))
+      .style("fill", color(d.key));
+
+  });
+
+  g.select("path.area")
+      .attr("d", function(d) { return area(d.values); });
+
+  g2.select("path.area")
+      .attr("d", function(d) { return area2(d.values); });
+
+  fcs.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + h + ")")
+    .call(xAxis);
+
+  ctx.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + h2 + ")")
+      .call(xAxis);
 
 }
 
