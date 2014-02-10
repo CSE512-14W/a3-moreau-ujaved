@@ -74,11 +74,12 @@ To deploy the visualization, download the a3.html file along with the movies.csv
 
 We got to distribute the responsibilities quite evenly for the project. We found a good way to collaboratively work without spending too much time resolving conflicts. Thierry was in charge of the stacked area graph visualizations (static and transitions), the focus+context zooming/brushing. Umar was in charge of the data engine that extracts raw data from the csv dataset, the multi-view area selection and tooltip, and page presentation and layout.
 
-Thierry's work breakdown (~20 hrs):
+Thierry's work breakdown (~24 hrs):
 
 * Learning D3 (5hrs)
 * Looking at examples and formulating objectives (1 hr with Umar)
 * Basic stacked area (static + transitions) chart from example from a clean csv file (6hrs)
-* Merging with Umar's data engine and fixing transitions (2 hrs)
+* Merging with Umar's data engine and fixing transitions (3 hrs)
 * Context-focus view with brushing (6 hrs)
+* Report (3 hrs)
 
