@@ -29,10 +29,54 @@ svg {
   shape-rendering: crispEdges;
 }
 
+/*
+#metric {
+        position: absolute;
+        left:1050px;
+        top:180px;
+        width: auto;
+        height: auto;
+}
+
+#agg {
+        position: absolute;
+        left:1050px;
+        top:220px;
+        width: auto;
+        height: auto;
+}
+
+#metricText {
+        position: absolute;
+        left:1050px;
+        top:75px;
+        width: auto;
+        height: auto;
+}
+
+
+#aggText {
+        position: absolute;
+        left:1050px;
+        top:100px;
+        width: auto;
+        height: auto;
+}
+*/
+
+#info {
+        position: absolute;
+        left:1020px;
+        top:75px;
+        width: auto;
+        height: auto;
+}
+
 #tooltip {
         position: absolute;
-        left: 350px;
-        width: 120px;
+        left:670px;
+        top:70px;
+        width: auto;
         height: auto;
         padding: 10px;
         background-color: white;
@@ -60,10 +104,11 @@ svg {
 <body>
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<h1><i>Les Misérables</i> Co-occurrence</h1>
+<h1>Movies</h1>
 
-<aside style="margin-top:50px;">
-<p>Attribute: &nbsp <select id="metric">
+<aside id="info">
+<p id="metricText">Attribute: &nbsp 
+  <select id="metric">
   <option value="count">Movie Count</option>
   <option value="usGross">US Gross</option>
   <option value="wwGross">Worldwide Gross</option>
@@ -73,11 +118,19 @@ svg {
   <option value="tomatoes">Rotten Tomatoes Rating</option>
 </select>
 
-<p>Aggregate: <select id="agg">
+<p id="aggText">Aggregate: 
+  <select id="agg">
   <option value="sum">Sum</option>
   <option value="median">Median</option>
   <option value="mean">Mean</option>
 </select>
+
+<p>This matrix diagram visualizes character co-occurrences in Victor.
+
+<p>Each colored cell represents two characters that appeared in the same chapter; darker cells indicate characters that co-occurred more frequently.
+
+<p>Use the drop-down menu to reorder the matrix and explore the data.
+
 
 </aside>
 
@@ -86,6 +139,8 @@ svg {
 </div>
 
 <script>
+
+//style="margin-top:50px;"
 
 var m  = [10, 160, 100, 10],
     m2 = [400, m[1], 20, m[3]],
