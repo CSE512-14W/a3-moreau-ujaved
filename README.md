@@ -12,14 +12,18 @@ This stacked area visualization is constructed from the movie data set from assi
 
 This data set combines varied statistics from different sources (IMDB, Rotten Tomatoes, The Numbers). It provides information on movies released from 1929 to 2011, including quantitative data on production budget, user ratings, gross, dvd sales but also nominal data such as genre. 
 
-The goal of our visualization tool is to provide viewers a timeline of aggregate statistics from the movie data set organized by genre. Users are given the choice to explore the number of releases, US gross, worldwide gross, production budget, IMDB ratings and Rotten Tomatoes ratings, grouped by movie genre and by release year. The user also can pick the aggregate function (sum, mean, median) applied to the specific statistic they wish to analyze. 
+## Goal
+
+The goal of our visualization tool is to provide viewers a timeline of aggregate statistics from the movie data set organized by genre. Users are given the choice to explore the movie release count, US gross, worldwide gross, production budget, IMDB ratings and Rotten Tomatoes ratings, grouped by movie genre and by release year. The user also can pick the aggregate function (sum, mean, median) applied to the specific statistic they wish to analyze. 
+
+## Description
 
 Our visualization tool provides the user with the following interactions:
 
 1. Normalized and absolute stacked area views of aggregate statistics with multi-view mouse-over selection and labelling.  Normalizing the aggregate statistics helps preserve details for older movies statistics for which data is sparse. The sparsity on old movie information causes small variations to produce huge swings in the normalized view. Thus, we provide a second timeline displaying absolute (thus non-normalized) measures of the statistic they decide to explore. Providing multi-view mouse-over selection helps the user connect the normalized values with the absolute values.
 2. The option to pick the statistic of interest (e.g. Production Budget, IMDB rating etc.). Transitions from one statistic to another allows the user to explore the data and compare and contrast various attributes. For instance the user can use the visualization tool to determine which genre is more popular under IMDB ratings vs. Rotten Tomatoes ratings, or which genre generates the most gross worldwide vs. in the U.S.
-3. The option to pick the aggregate function of interest (sum, median and median). Providing mean and median aggregates on the statistics of interest allows the user to explore the movie data in more depth. For instance, despite the much lower number of releases, do documentaries on average get better ratings than comedy movies?
-4. Brushing to select a time bound of interest. We provide a Context+Focus zooming where the absolute statistics window is used as a context window and the normalized statistics is used as the focus window. This interaction allows the users to focus the normalized stacked area plot on their decades of interest.
+3. The option to pick the aggregate function of interest (sum, median and median). Providing mean and median aggregates on the statistics of interest allows the user to explore the movie data in more depth. For instance, despite the much lower number of releases, do documentaries on average get better ratings than comedies?
+4. Brushing to select a period of interest. We provide a Context+Focus zooming where the absolute statistics window is used as a context window and the normalized statistics is used as the focus window. This interaction allows the users to focus the normalized stacked area plot on their decades of interest.
 
 
 ## Story Board
@@ -56,9 +60,9 @@ The main feature that was dropped between the storyboard and the final implement
 
 ## Running Instructions
 
-Our visualization is web based and can be accessed directly here: http://tmoreau89.github.io/
+Our visualization is web based and can be accessed directly here: http://a3-moreau-ujaved.github.io/
 
-To deploy the visualization, download the a3.html file along with the movies.csv data set at http://cse512-14w.github.io/a3-moreau-ujaved/ and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/.
+To deploy the visualization, download the a3.html file along with the movies.csv data by running  `git clone https://github.com/CSE512-14W/a3-moreau-ujaved.git` and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/. You may have to rename a3.html to index.html.
 
 
 ## Development Process
