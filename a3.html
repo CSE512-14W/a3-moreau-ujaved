@@ -65,6 +65,8 @@ svg {
   <option value="count">Movie Count</option>
   <option value="usGross">US Gross</option>
   <option value="wwGross">Worldwide Gross</option>
+<!--   <option value="dvd">US DVD Sales</option>
+ -->  <option value="prod">Production Budget</option>
   <option value="imdb">IMDB Rating</option>
   <option value="tomatoes">Rotten Tomatoes Rating</option>
 </select>
@@ -83,7 +85,7 @@ svg {
 
 <script>
 
-var m  = [10, 50, 100, 10],
+var m  = [100, 50, 100, 10],
     m2 = [400, m[1], 20, m[3]],
     w  = 960 - m[1] - m[3],
     h  = 500 - m[0] - m[2],
@@ -283,6 +285,14 @@ d3.select("#metric").on("change", function() {
           updateData('Worldwide Gross', agg);
           break;
 
+      case "dvd":
+          updateData('US DVD Sales', agg);
+          break;
+
+      case "prod":
+          updateData('Production Budget', agg);
+          break;
+
       case "imdb":
           updateData('IMDB Rating', agg);
           break;
@@ -301,12 +311,22 @@ d3.select("#agg").on("change", function() {
     switch (m) {
       case 'usGross':
         metric = 'US Gross';
+        break;
       case 'wwGross':
         metric = 'Worldwide Gross';
+        break;
+      case 'dvd':
+        metric = 'US DVD Sales';
+        break;
+      case 'prod':
+        metric = 'Production Budget';
+        break;
       case 'imdb':
         metric = 'IMDB Rating';
+        break;
       case 'tomatoes':
         metric = 'Rotten Tomatoes Rating';
+        break;
     }
     switch (this.value) {
       case 'sum':
@@ -490,9 +510,6 @@ function stackedArea() {
       .attr("class", "area")
       .attr("d", area(d.values))
       .on("mouseover", function(d) {
-        //console.log(d3.select(this.selectAll(".area")));
-        console.log(area(d.values));
-        console.log(d3.select(this));
         d3.select("#tooltip")
           .select("#value")
           .text(d.key); 
