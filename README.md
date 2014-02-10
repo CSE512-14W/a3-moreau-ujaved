@@ -65,7 +65,7 @@ The main feature that was dropped between the storyboard and the final implement
 
 ## Running Instructions
 
-Our visualization is web based and can be accessed directly here: http://a3-moreau-ujaved.github.io/
+Our visualization is web based and can be accessed directly here: http://cse512-14w.github.io/a3-moreau-ujaved
 
 To deploy the visualization, download the a3.html file along with the movies.csv data by running  `git clone https://github.com/CSE512-14W/a3-moreau-ujaved.git` and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/. You may have to rename a3.html to index.html.
 
