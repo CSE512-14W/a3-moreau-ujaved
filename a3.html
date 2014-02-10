@@ -85,7 +85,7 @@ svg {
 
 <script>
 
-var m  = [100, 50, 100, 10],
+var m  = [10, 85, 100, 10],
     m2 = [400, m[1], 20, m[3]],
     w  = 960 - m[1] - m[3],
     h  = 500 - m[0] - m[2],
@@ -100,6 +100,8 @@ var x = d3.time.scale().range([0, w - w_margin]),
     y2 = d3.scale.linear().range([h2, 0]),
     duration = 1500,
     delay = 500;
+
+
 
 var color = d3.scale.category20c();
 
@@ -188,17 +190,20 @@ var stack, stack2;
 var genre2year2movies;
 var year2genre2movies;
 var dates;
+var genres;
 var year2movies;
 
 d3.csv("movies.csv", function (data) {
   dataset = [];
   dates = new Object();
+  genres = new Object();
   year2movies = new Object();
   data.forEach(function(d) {
     var date = parseDate(d['Release Date']);
     if (isValidDate(date) && isValidGenre(d['Major Genre'])) {
       d.year = +date.getFullYear();
       dates[d.year] = true;
+      genres[d['Major Genre']] = true;
       dataset.push(d);
 
       if (!(d.year in year2movies))
@@ -208,6 +213,7 @@ d3.csv("movies.csv", function (data) {
   });
 
   dates = d3.keys(dates);
+  genres = d3.keys(genres);
 
   // Nest count values by genre.
   genre2year2movies = d3.nest()
@@ -453,6 +459,28 @@ function updateStackedArea() {
 
 function stackedArea() {
 
+  var legend = fcs.selectAll(".legend")
+            .data(genres)
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(0," + i * h/num_genres + ")"; });
+
+  legend.append("rect")
+      .attr("x", (w - m[1] - m[3] + 20))
+      .attr("width", h/num_genres-2)
+      .attr("height", h/num_genres-2)
+      .style("fill", color);
+
+  
+  legend.append("text")
+      .attr("x", (w - m[1] - m[3] + 55))
+      .attr("y", 10)
+      .attr("dy", 10)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "13px")
+      .style("text-anchor", "start")
+      .text(function(d) { return d; });
+  
   stack = d3.layout.stack()
     .values(function(genre) { return genre.values; })
     .x(function(year) { return year.key; })
@@ -549,7 +577,7 @@ function stackedArea() {
 
       });
 
-
+    /*
     d3.select(this).append("text")
         .attr("x", (w - m[1] - m[3]))
         .attr("dx", 4)
@@ -558,6 +586,7 @@ function stackedArea() {
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
         .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.metric / 2 + d.metric0))+5.5) + ")"; });
+        */
   });
 
   // ctx.append("g")
