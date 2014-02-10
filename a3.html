@@ -105,7 +105,7 @@ svg {
 <body>
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<h1>Movies</h1>
+<h1>Visualizing Half-a-Century of Movie Statistics</h1>
 
 <aside id="info">
 <p id="metricText">Attribute: &nbsp 
@@ -126,12 +126,11 @@ svg {
   <option value="mean">Mean</option>
 </select>
 
-<p>This matrix diagram visualizes character co-occurrences in Victor.
+<p> The topmost stacked area chart displays normalized aggregate movie statistics. The bottom area chart displays the same non-normalized data.
 
-<p>Each colored cell represents two characters that appeared in the same chapter; darker cells indicate characters that co-occurred more frequently.
+<p>Each colored layer represents a movie genre.
 
-<p>Use the drop-down menu to reorder the matrix and explore the data.
-
+<p>Use the drop-down menu to select the statistic and aggregate function of your choice. You can also select a time period of interest in the bottom area chart.
 
 </aside>
 
@@ -143,7 +142,7 @@ svg {
 
 //style="margin-top:50px;"
 
-var m  = [10, 160, 100, 10],
+var m  = [10, 155, 100, 10],
     m2 = [400, m[1], 20, m[3]],
     w  = 960 - m[1] - m[3],
     h  = 500 - m[0] - m[2],
