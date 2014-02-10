@@ -501,26 +501,36 @@ function stackedArea() {
       .y0(function(d) { return y2(d.absMetric0); })
       .y1(function(d) { return y2(d.absMetric0 + d.absMetric); });
 
-  g.each(function(d) {
-
+  g.each(function(d,j) {
     d3.select(this).selectAll(".area")
       .data(d3.range(3))
       .enter().insert("path", ".line")
       .filter(function(d, i) { return !i; })
       .attr("class", "area")
       .attr("d", area(d.values))
+      .style("fill", color(d.key))
       .on("mouseover", function(d) {
+        //console.log(area(d.values));
+        //console.log(d3.select(this));
+        //console.log(g2[0][j]);
+        //console.log(g2[0][j].childNodes[0].style.fill);
+        //console.log(this);
         d3.select("#tooltip")
           .select("#value")
           .text(d.key); 
         d3.select("#tooltip").classed("hidden", false);
         var curColor = this.style.fill;
         var newColor = Darken(curColor,0.4);
+
         d3.select(this)
           //.transition().duration(250)
           .attr("stroke", "black")
           .attr("stroke-width", 1)
           .style("fill", newColor);
+
+        d3.select(g2[0][j].childNodes[0])
+          .style("fill", "#e6550d");
+
       })
       .on("mouseout", function(d) {
         d3.select("#tooltip").classed("hidden", true);
@@ -529,8 +539,15 @@ function stackedArea() {
           .duration(250)
           .attr("stroke", "none")
           .style("fill", color(d.key));
-      })
-      .style("fill", color(d.key));
+
+        
+        d3.select(g2[0][j].childNodes[0])
+          .transition()
+          .duration(250)
+          .style("fill", "#c6dbef");
+        
+
+      });
 
 
     d3.select(this).append("text")
@@ -554,10 +571,11 @@ function stackedArea() {
 
     d3.select(this).selectAll(".area")
       .data(d3.range(3))
-      .enter().insert("path")
+      .enter().insert("path", ".line")
+      .filter(function(d, i) { return !i; })
       .attr("class", "area")
       .attr("d", area2(d.values))
-      .style("fill", color(d.key));
+      .style("fill", "#c6dbef");
 
   });
 
