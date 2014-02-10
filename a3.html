@@ -18,10 +18,9 @@ svg {
     stroke: none;
     shape-rendering: crispEdges;
 }
-
 .axis text {
-    font-family: sans-serif;
-    font-size: 8px;
+    font-family: Helvetica;
+    font-size: 10px;
 }
 
 #tooltip {
@@ -55,8 +54,8 @@ svg {
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
-<aside style="margin-top:80px;">
-<p>Metric: <select id="metric">
+<aside style="margin-top:50px;">
+<p>Attribute: <select id="metric">
   <option value="count">Movie Count</option>
   <option value="usGross">US Gross</option>
   <option value="wwGross">Worldwide Gross</option>
@@ -70,11 +69,6 @@ svg {
   <option value="mean">Mean</option>
 </select>
 
-<p>Movie dataset.
-
-<p>Use the drop-down menu to reorder the matrix and explore the data.
-
-<p>Built with <a href="http://d3js.org/">d3.js</a>.
 </aside>
 
 <div id="tooltip" class="hidden">
@@ -83,46 +77,50 @@ svg {
 
 <script>
 
-var m = [20, 30, 30, 20],
-    w = 960 - m[1] - m[3],
-    h = 500 - m[0] - m[2];
+var m  = [10, 50, 100, 10],
+    m2 = [400, m[1], 20, m[3]],
+    w  = 960 - m[1] - m[3],
+    h  = 500 - m[0] - m[2],
+    h2 = 500 - m2[0] - m2[2];
 
-var w_margin = 80,
-    h_margin = 20;
+var w_margin = m[1] + m[3],
+    h_margin = m[0] + m[2];
 
-var x,
-    y,
+var x = d3.time.scale().range([0, w - w_margin]),
+    y = d3.scale.linear().range([h, 0]),
+    x2 = d3.time.scale().range([0, w - w_margin]),
+    y2 = d3.scale.linear().range([h2, 0]),
     duration = 1500,
     delay = 500;
 
 var color = d3.scale.category20c();
 
+// X axis
+var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom")
+                .tickFormat(d3.format(".0f"));
 
-var svg = d3.select("body").append("svg")
-    .attr("width", w + m[1] + m[3])
-    .attr("height", h + m[0] + m[2])
-  .append("g")
-    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
-
-var num_genres;
-
-// A line generator, for the dark stroke.
-var line = d3.svg.line()
-    .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y(function(d) { return y(d.metric); });
-
-// A line generator, for the dark stroke.
-var axis = d3.svg.line()
-    .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y(h);
-
-// A area generator, for the dark stroke.
+// A area generator
 var area = d3.svg.area()
     .interpolate("basis")
-    .x(function(d) { return x(d.key); })
-    .y1(function(d) { return y(d.metric); });
+    .x(function(d) { return x(d.key); });
+
+var area2 = d3.svg.area()
+    .interpolate("monotone")
+    .x(function(d) { return x2(d.key); });
+
+var fcs = d3.select("body").append("svg")
+    .attr("width", w + m[1] + m[3])
+    .attr("height", h + m[0] + m[2] - h2)
+    .append("g")
+      .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+var ctx = d3.select("body").append("svg")
+    .attr("width", w + m2[1] + m2[3])
+    .attr("height", h2 + m2[0] + m2[2] - h)
+    .append("g")
+      .attr("transform", "translate(" + m2[3] + "," + 0 + ")");
 
 function parseDate(d) {
   var parser = d3.time.format("%d-%b-%y").parse;
@@ -172,6 +170,7 @@ function getAttributeAggregate(year, attribute, aggregate) {
   
 }
 
+var num_genres;
 var dataset;
 var stack;
 var genre2year2movies;
@@ -228,9 +227,9 @@ d3.csv("movies.csv", function (data) {
     }
     g.values.forEach(function(y) {
       y.count = y.values.length;
-      y.TotalMovieCount = year2movies[y.key].length;
-      y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
+      y.relativeCount = (y.count*1.0)/(year2movies[y.key].length*1.0);
 
+      y.absMetric = y.count;
       y.metric = y.relativeCount;
      }
     )
@@ -240,12 +239,16 @@ d3.csv("movies.csv", function (data) {
   // Number of distinct genres 
   num_genres = genre2year2movies.length;
 
-  var g = svg.selectAll("g")
+  var g = fcs.selectAll("g")
       .data(genre2year2movies)
     .enter().append("g")
       .attr("class", "genre");
 
-  //console.log(genre2year2movies);
+  var g2 = ctx.selectAll("g")
+      .data(genre2year2movies)
+    .enter().append("g")
+      .attr("class", "genre");
+
   stackedArea();
 });
 
@@ -255,7 +258,8 @@ d3.select("#metric").on("change", function() {
     switch (this.value) {
       case "count":
           genre2year2movies.forEach(function(g) {
-            g.values.forEach(function(y) {    
+            g.values.forEach(function(y) {  
+              y.absMetric =  y.count;
               y.metric = y.relativeCount;
             });
           });
@@ -340,18 +344,20 @@ function updateData(attribute, aggregate) {
   genre2year2movies.forEach(function(g) {
     g.values.forEach(function(y) {    
       var unnormalized = getAttributeAggregate(y,attribute,aggregate);
-      //console.log(g.key + " " + y.key + " " + year2total[y.key]);
-      if (y.key in year2total)
+      if (y.key in year2total) {
+          y.absMetric = unnormalized;
           y.metric = unnormalized/year2total[y.key];
-      else 
+      } else {
+          y.absMetric = 0.0;
           y.metric = 0.0;
-      //y.metric = unnormalized;
+      }
      });
   });
 }
 
 function updateStackedArea() {
   // Update visualization
+  
   var stack = d3.layout.stack()
       .values(function(genre) { return genre.values; })
       .x(function(year) { return year.key; })
@@ -359,20 +365,35 @@ function updateStackedArea() {
       .out(function(year, y0, y) { year.metric0 = y0; })
       .order("reverse");
 
-  stack(genre2year2movies);
+  var stack2 = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.absMetric; })
+      .out(function(year, y0, y) { year.absMetric0 = y0; })
+      .order("reverse");
 
-  minY = 0
+  stack(genre2year2movies);
+  stack2(genre2year2movies);
+
+  // Update the y axis domain
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
   });
-  y.domain([minY,maxY]);
-  y.range([h, 0]);
+  y.domain([0, maxY]);
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.absMetric + y.absMetric0; });
+   });
+  y2.domain([0, maxY]);
 
   area
       .y0(function(d) { return y(d.metric0); })
       .y1(function(d) { return y(d.metric0 + d.metric); });
 
-  var t = svg.selectAll(".genre").transition()
+  area2
+      .y0(function(d) { return y2(d.absMetric0); })
+      .y1(function(d) { return y2(d.absMetric0 + d.absMetric); });
+
+  var t = fcs.selectAll(".genre").transition()
       .duration(duration)
       .attr("transform", "translate(0,0)")
       .each("end", function() { d3.select(this).attr("transform", null); });
@@ -382,6 +403,14 @@ function updateStackedArea() {
 
   t.select("text")
       .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + y(d.metric / 2 + d.metric0) + ")"; });
+
+  var t2 = ctx.selectAll(".genre").transition()
+      .duration(duration)
+      .attr("transform", "translate(0,0)")
+      .each("end", function() { d3.select(this).attr("transform", null); });
+
+  t2.select("path.area")
+      .attr("d", function(d) { return area2(d.values); });
 }
 
 function stackedArea() {
@@ -393,11 +422,17 @@ function stackedArea() {
       .out(function(year, y0, y) { year.metric0 = y0; })
       .order("reverse");
 
+  var stack2 = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.absMetric; })
+      .out(function(year, y0, y) { year.absMetric0 = y0; })
+      .order("reverse");
+
   stack(genre2year2movies);
+  stack2(genre2year2movies);
 
-  x = d3.time.scale().range([0, w - w_margin]);
-  y = d3.scale.linear().range([h, 0]);
-
+  // Update domains
   minX = d3.min(genre2year2movies, function(g) {
       return d3.min(g.values, function(y) { return y.key; });
    });
@@ -405,23 +440,33 @@ function stackedArea() {
       return d3.max(g.values, function(y) { return y.key; });
    });
   x.domain([minX,maxX]);
+  x2.domain([minX,maxX]);
 
-  minY = 0
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
    });
-  y.domain([minY,maxY]);
+  y.domain([0, maxY]);
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.absMetric + y.absMetric0; });
+   });
+  y2.domain([0, maxY]);
 
-  var g = svg.selectAll(".genre");
+  var g = fcs.selectAll(".genre");
+
+  var g2 = ctx.selectAll(".genre");
 
   area
       .y0(function(d) { return y(d.metric0); })
       .y1(function(d) { return y(d.metric0 + d.metric); });
 
+  area2
+      .y0(function(d) { return y2(d.absMetric0); })
+      .y1(function(d) { return y2(d.absMetric0 + d.absMetric); });
+
   g.each(function(d) {
 
     d3.select(this).selectAll(".area")
-        .data(d3.range(3))
+      .data(d3.range(3))
       .enter().insert("path", ".line")
       .filter(function(d, i) { return !i; })
       .attr("class", "area")
@@ -454,29 +499,41 @@ function stackedArea() {
 
 
     d3.select(this).append("text")
-        .attr("x", (w - w_margin))
+        .attr("x", (w - m[1] - m[3]))
         .attr("dx", 4)
-        .attr("dy", -2)
+        .attr("dy", 0)
         .text(d.key)
         .attr("font-family", "sans-serif")
         .attr("font-size", "11px")
         .attr("transform", function(d) { d = d.values[d.values.length - 1]; return "translate(" + 0 + "," + ((y(d.metric / 2 + d.metric0))+5.5) + ")"; });
   });
 
+  g2.each(function(d) {
+
+    d3.select(this).selectAll(".area")
+      .data(d3.range(3))
+      .enter().insert("path")
+      .attr("class", "area")
+      .attr("d", area2(d.values))
+      .style("fill", color(d.key));
+
+  });
+
   g.select("path.area")
       .attr("d", function(d) { return area(d.values); });
 
-  var xAxis = d3.svg.axis()
-                  .scale(x)
-                  .orient("bottom")
-                  .tickFormat(d3.format(".0f"))
-                  .ticks(7); 
+  g2.select("path.area")
+      .attr("d", function(d) { return area2(d.values); });
 
-  //Create X axis
-  svg.append("g")
+  fcs.append("g")
     .attr("class", "axis")
-    .attr("transform", "translate(" + 0 + " ," + (h) + ")")
+    .attr("transform", "translate(0," + h + ")")
     .call(xAxis);
+
+  ctx.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + h2 + ")")
+      .call(xAxis);
 }
 
 function Darken(hexColor, factor)
