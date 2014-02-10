@@ -12,6 +12,11 @@ This stacked area visualization is constructed from the movie data set from assi
 
 This data set combines varied statistics from different sources (IMDB, Rotten Tomatoes, The Numbers). It provides information on movies released from 1929 to 2011, including quantitative data on production budget, user ratings, gross, dvd sales but also nominal data such as genre. 
 
+Our final visualization can be seen below:
+
+![final](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/final.png)
+
+
 ## Goal
 
 The goal of our visualization tool is to provide viewers a timeline of aggregate statistics from the movie data set organized by genre. Users are given the choice to explore the movie release count, US gross, worldwide gross, production budget, IMDB ratings and Rotten Tomatoes ratings, grouped by movie genre and by release year. The user also can pick the aggregate function (sum, mean, median) applied to the specific statistic they wish to analyze. 
