@@ -197,9 +197,9 @@ d3.csv("movies.csv", function (data) {
     }
     g.values.forEach(function(y) {
       y.count = y.values.length;
-      y.TotalMovieCount = year2movies[y.key].length;
-      y.relativeCount = (y.count*1.0)/(y.TotalMovieCount*1.0);
+      y.relativeCount = (y.count*1.0)/(year2movies[y.key].length*1.0);
 
+      y.absMetric = y.count;
       y.metric = y.relativeCount;
      }
     )
@@ -228,7 +228,8 @@ d3.select("#metric").on("change", function() {
     switch (this.value) {
       case "count":
           genre2year2movies.forEach(function(g) {
-            g.values.forEach(function(y) {    
+            g.values.forEach(function(y) {  
+              y.absMetric =  y.count;
               y.metric = y.relativeCount;
             });
           });
@@ -305,16 +306,20 @@ function updateData(attribute, aggregate) {
   genre2year2movies.forEach(function(g) {
     g.values.forEach(function(y) {    
       var unnormalized = getAttributeAggregate(y,attribute,aggregate);
-      if (y.key in year2total)
+      if (y.key in year2total) {
+          y.absMetric = unnormalized;
           y.metric = unnormalized/year2total[y.key];
-      else 
+      } else {
+          y.absMetric = 0.0;
           y.metric = 0.0;
+      }
      });
   });
 }
 
 function updateStackedArea() {
   // Update visualization
+  
   var stack = d3.layout.stack()
       .values(function(genre) { return genre.values; })
       .x(function(year) { return year.key; })
@@ -322,13 +327,24 @@ function updateStackedArea() {
       .out(function(year, y0, y) { year.metric0 = y0; })
       .order("reverse");
 
+  var stack2 = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.absMetric; })
+      .out(function(year, y0, y) { year.absMetric0 = y0; })
+      .order("reverse");
+
   stack(genre2year2movies);
+  stack2(genre2year2movies);
 
   // Update the y axis domain
   maxY = d3.max(genre2year2movies, function(g) {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
   });
   y.domain([0, maxY]);
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.absMetric + y.absMetric0; });
+   });
   y2.domain([0, maxY]);
 
   area
@@ -336,8 +352,8 @@ function updateStackedArea() {
       .y1(function(d) { return y(d.metric0 + d.metric); });
 
   area2
-      .y0(function(d) { return y2(d.metric0); })
-      .y1(function(d) { return y2(d.metric0 + d.metric); });
+      .y0(function(d) { return y2(d.absMetric0); })
+      .y1(function(d) { return y2(d.absMetric0 + d.absMetric); });
 
   var t = fcs.selectAll(".genre").transition()
       .duration(duration)
@@ -368,7 +384,15 @@ function stackedArea() {
       .out(function(year, y0, y) { year.metric0 = y0; })
       .order("reverse");
 
+  var stack2 = d3.layout.stack()
+      .values(function(genre) { return genre.values; })
+      .x(function(year) { return year.key; })
+      .y(function(year) { return year.absMetric; })
+      .out(function(year, y0, y) { year.absMetric0 = y0; })
+      .order("reverse");
+
   stack(genre2year2movies);
+  stack2(genre2year2movies);
 
   // Update domains
   minX = d3.min(genre2year2movies, function(g) {
@@ -384,6 +408,9 @@ function stackedArea() {
       return d3.max(g.values, function(y) { return y.metric + y.metric0; });
    });
   y.domain([0, maxY]);
+  maxY = d3.max(genre2year2movies, function(g) {
+      return d3.max(g.values, function(y) { return y.absMetric + y.absMetric0; });
+   });
   y2.domain([0, maxY]);
 
   var g = fcs.selectAll(".genre");
@@ -395,8 +422,8 @@ function stackedArea() {
       .y1(function(d) { return y(d.metric0 + d.metric); });
 
   area2
-      .y0(function(d) { return y2(d.metric0); })
-      .y1(function(d) { return y2(d.metric0 + d.metric); });
+      .y0(function(d) { return y2(d.absMetric0); })
+      .y1(function(d) { return y2(d.absMetric0 + d.absMetric); });
 
   g.each(function(d) {
 
@@ -408,7 +435,7 @@ function stackedArea() {
       .style("fill", color(d.key));
 
     d3.select(this).append("text")
-        .attr("x", (w - m[1]))
+        .attr("x", (w - m[1] - m[3]))
         .attr("dx", 4)
         .attr("dy", 0)
         .text(d.key)
@@ -443,7 +470,6 @@ function stackedArea() {
       .attr("class", "axis")
       .attr("transform", "translate(0," + h2 + ")")
       .call(xAxis);
-
 }
 
 </script>
