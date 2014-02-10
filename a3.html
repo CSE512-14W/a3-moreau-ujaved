@@ -29,6 +29,7 @@ svg {
   shape-rendering: crispEdges;
 }
 
+/*
 #metric {
         position: absolute;
         left:1050px;
@@ -44,11 +45,29 @@ svg {
         width: auto;
         height: auto;
 }
+*/
+
+#metricText {
+        position: absolute;
+        left:1050px;
+        top:75px;
+        width: auto;
+        height: auto;
+}
+
+
+#aggText {
+        position: absolute;
+        left:1050px;
+        top:100px;
+        width: auto;
+        height: auto;
+}
 
 #tooltip {
         position: absolute;
-        left:700px;
-        top:160px;
+        left:670px;
+        top:70px;
         width: auto;
         height: auto;
         padding: 10px;
@@ -79,8 +98,8 @@ svg {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <h1>Movies</h1>
 
-<aside style="margin-top:50px;">
-<p>Attribute: &nbsp 
+<aside>
+<p id="metricText">Attribute: &nbsp 
   <select id="metric">
   <option value="count">Movie Count</option>
   <option value="usGross">US Gross</option>
@@ -91,7 +110,7 @@ svg {
   <option value="tomatoes">Rotten Tomatoes Rating</option>
 </select>
 
-<p>Aggregate: 
+<p id="aggText">Aggregate: 
   <select id="agg">
   <option value="sum">Sum</option>
   <option value="median">Median</option>
@@ -105,6 +124,8 @@ svg {
 </div>
 
 <script>
+
+//style="margin-top:50px;"
 
 var m  = [10, 160, 100, 10],
     m2 = [400, m[1], 20, m[3]],
