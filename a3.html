@@ -106,7 +106,7 @@ svg {
 
 <script>
 
-var m  = [10, 85, 100, 10],
+var m  = [10, 160, 100, 10],
     m2 = [400, m[1], 20, m[3]],
     w  = 960 - m[1] - m[3],
     h  = 500 - m[0] - m[2],
@@ -115,9 +115,9 @@ var m  = [10, 85, 100, 10],
 var w_margin = m[1] + m[3],
     h_margin = m[0] + m[2];
 
-var x = d3.time.scale().range([0, w - w_margin]),
+var x = d3.time.scale().range([0, w]),
     y = d3.scale.linear().range([h, 0]),
-    x2 = d3.time.scale().range([0, w - w_margin]),
+    x2 = d3.time.scale().range([0, w]),
     y2 = d3.scale.linear().range([h2, 0]),
     duration = 1500,
     delay = 500;
@@ -132,9 +132,9 @@ var xAxis = d3.svg.axis()
                 .orient("bottom")
                 .tickFormat(d3.format(".0f"));
 
-// var brush = d3.svg.brush()
-//     .x(x2)
-//     .on("brush", brushed);
+var brush = d3.svg.brush()
+    .x(x2)
+    .on("brush", brushed);
 
 // A area generator
 var area = d3.svg.area()
@@ -142,7 +142,7 @@ var area = d3.svg.area()
     .x(function(d) { return x(d.key); });
 
 var area2 = d3.svg.area()
-    .interpolate("monotone")
+    .interpolate("basis")
     .x(function(d) { return x2(d.key); });
 
 var fcs = d3.select("body").append("svg")
@@ -414,6 +414,7 @@ function updateData(attribute, aggregate) {
 
 function brushed() {
   x.domain(brush.empty() ? x2.domain() : brush.extent());
+  xAxis.scale(x);
 
   fcs.select(".axis").call(xAxis);
 
@@ -487,16 +488,17 @@ function stackedArea() {
             .attr("transform", function(d, i) { return "translate(0," + i * h/num_genres + ")"; });
 
   legend.append("rect")
-      .attr("x", (w - m[1] - m[3] + 20))
+      .attr("x", (w + 5))
       .attr("width", h/num_genres-2)
       .attr("height", h/num_genres-2)
       .style("fill", color);
 
   
   legend.append("text")
-      .attr("x", (w - m[1] - m[3] + 55))
-      .attr("y", 10)
-      .attr("dy", 10)
+      .attr("x", (w + 5 + h/num_genres))
+      .attr("dx", 0)
+      .attr("y", h/num_genres)
+      .attr("dy", -12)
       .attr("font-family", "sans-serif")
       .attr("font-size", "13px")
       .style("text-anchor", "start")
@@ -572,7 +574,6 @@ function stackedArea() {
         var newColor = Darken(curColor,0.4);
 
         d3.select(this)
-          //.transition().duration(250)
           .attr("stroke", "black")
           .attr("stroke-width", 1)
           .style("fill", newColor);
@@ -610,12 +611,12 @@ function stackedArea() {
         */
   });
 
-  // ctx.append("g")
-  //     .attr("class", "x brush")
-  //     .call(brush)
-  //   .selectAll("rect")
-  //     .attr("y", -6)
-  //     .attr("height", h2 + 7);
+  ctx.append("g")
+      .attr("class", "x brush")
+      .call(brush)
+    .selectAll("rect")
+      .attr("y", -6)
+      .attr("height", h2 + 7);
 
   g2.each(function(d) {
 
