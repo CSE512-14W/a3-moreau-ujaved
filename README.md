@@ -21,7 +21,8 @@ Our visualization tool provides the user with the following interactions:
 3. The option to pick the aggregate function of interest (sum, median and median). Providing mean and median aggregates on the statistics of interest allows the user to explore the movie data in more depth. For instance, despite the much lower number of releases, do documentaries on average get better ratings than comedy movies?
 4. Brushing to select a time bound of interest. We provide a Context+Focus zooming where the absolute statistics window is used as a context window and the normalized statistics is used as the focus window. This interaction allows the users to focus the normalized stacked area plot on their decades of interest.
 
-## On the Visualization
+
+## Story Board
 
 Our original source of inspiration is Google's Play Music Timeline: http://research.google.com/bigpicture/music/#
 
@@ -38,6 +39,14 @@ We were motivated to deliver a visualization tool that would allow viewers to no
 
 In A2, a lot of pre-processing was done in Tableau in order to export relevant data to a more flexible visualization tool. For this assignment, we wanted to process data directly from the raw csv file. There are two reasons for this: (1) the movie data set is small enough (~3200 lines) that it can quickly be processed in javascript, and (2) it would allow us to build a powerful data engine that would provide as much relevant information as possible to the user.
 
+Because we chose to normalize the movie statistics, it was appropriate to add a second timeline describing absolute trends for direct comparison. 
+
+* The user would be able to mouse-over the areas in the normalized timeline, and the matching area in the absolute timeline would be get highlighted
+* The user would also be able to select an range of interest in the absolute timeline, which would cause the normalized timeline to focus onto the selected time-range.
+
+### Changes between Storyboard and the Final Implementation
+
+The main feature that was dropped between the storyboard and the final implementation was the text labels on the area charts. We quickly realized it would be challenging to place text on areas in a way that labels would be unambiguous. We decided to go with a simple legend, which makes reading the chart unideal for the user since the user has to go back and forth between the chart and the legend to understand what each area corresponds to. Thankfully, the tool-tip provides quick labels to the user if she/he decides not to glance over the legend.
 
 ## Running Instructions
 
@@ -45,15 +54,6 @@ Our visualization is web based and can be accessed directly here: http://tmoreau
 
 To deploy the visualization, download the a3.html file along with the movies.csv data set at http://cse512-14w.github.io/a3-moreau-ujaved/ and run `python -m SimpleHTTPServer 9000` and access this from http://localhost:9000/.
 
-## Story Board
-
-The original storyboard based itself a lot on the Google Play Music initial view timeline. Instead of only allowing the user to view one attribute (popularity), we decided to let the user chose as many attributes as we could process from the movie dataset csv file. 
-
-Put either your storyboard content or a [link to your storyboard pdf file](storyboard.pdf?raw=true) here.   Just like A2, you can use any software to create a *reasonable* pdf storyboard.
-
-### Changes between Storyboard and the Final Implementation
-
-A paragraph explaining changes between the storyboard and the final implementation.
 
 ## Development Process
 
