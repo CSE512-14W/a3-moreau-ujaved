@@ -44,6 +44,12 @@ Because we chose to normalize the movie statistics, it was appropriate to add a 
 * The user would be able to mouse-over the areas in the normalized timeline, and the matching area in the absolute timeline would be get highlighted
 * The user would also be able to select an range of interest in the absolute timeline, which would cause the normalized timeline to focus onto the selected time-range.
 
+Finally, to make it easy for the user to determine which area corresponds to what genre, we would provide a mouse-over tooltip displaying the specific genre of interest. This is particulary helpful for areas too small to contain a label.
+
+The storyboard we formulated for this assignment can be viewed below:
+
+![storyboard](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/storyboard.png) 
+
 ### Changes between Storyboard and the Final Implementation
 
 The main feature that was dropped between the storyboard and the final implementation was the text labels on the area charts. We quickly realized it would be challenging to place text on areas in a way that labels would be unambiguous. We decided to go with a simple legend, which makes reading the chart unideal for the user since the user has to go back and forth between the chart and the legend to understand what each area corresponds to. Thankfully, the tool-tip provides quick labels to the user if she/he decides not to glance over the legend.
