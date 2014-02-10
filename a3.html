@@ -428,7 +428,7 @@ function stackedArea() {
       .attr("d", area(d.values))
       .on("mouseover", function(d) {
         //console.log(d3.select(this.selectAll(".area")));
-        console.log(d.values);
+        console.log(area(d.values));
         console.log(d3.select(this));
         d3.select("#tooltip")
           .select("#value")
