@@ -45,7 +45,6 @@ svg {
         width: auto;
         height: auto;
 }
-*/
 
 #metricText {
         position: absolute;
@@ -60,6 +59,15 @@ svg {
         position: absolute;
         left:1050px;
         top:100px;
+        width: auto;
+        height: auto;
+}
+*/
+
+#info {
+        position: absolute;
+        left:1020px;
+        top:75px;
         width: auto;
         height: auto;
 }
@@ -98,7 +106,7 @@ svg {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <h1>Movies</h1>
 
-<aside>
+<aside id="info">
 <p id="metricText">Attribute: &nbsp 
   <select id="metric">
   <option value="count">Movie Count</option>
@@ -116,6 +124,13 @@ svg {
   <option value="median">Median</option>
   <option value="mean">Mean</option>
 </select>
+
+<p>This matrix diagram visualizes character co-occurrences in Victor.
+
+<p>Each colored cell represents two characters that appeared in the same chapter; darker cells indicate characters that co-occurred more frequently.
+
+<p>Use the drop-down menu to reorder the matrix and explore the data.
+
 
 </aside>
 
