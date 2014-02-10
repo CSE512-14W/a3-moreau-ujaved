@@ -82,3 +82,11 @@ Thierry's work breakdown (~20 hrs):
 * Merging with Umar's data engine and fixing transitions (2 hrs)
 * Context-focus view with brushing (6 hrs)
 
+Umar's work breakdown (~21 hrs):
+
+* Learning D3/CSS/JS (10hrs)
+* Looking at examples and formulating objectives (1 hr with Thierry)
+* Data engine and transformations/massaging in js (7 hrs)
+* Highlighting the corresponding genre layers in both views (2 hrs)
+* Adding/integrating the two drop-down menus; adding lengends (1 hrs)
+
