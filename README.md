@@ -26,14 +26,14 @@ Our visualization tool provides the user with the following interactions:
 
 Our original source of inspiration is Google's Play Music Timeline: http://research.google.com/bigpicture/music/#
 
-[googleTimeline](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/google_play_timeline.png)
+![googleTimeline](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/google_play_timeline.png)
 
 This visualization, which is the result of a collaboration between two research groups at Google (Big Picture and Music Intelligence) "shows genres of music waxing and waning, based on how many Google Play Music users have an artist or album in their music library, and other data (such as album release dates). Each stripe on the graph represents a genre; the thickness of the stripe tells you roughly the popularity of music released in a given year in that genre."
 
 This timeline was Thierry's source of inspiration for A2. He produced static renderings of the popularity of movie genres from 1960 to 2010. He explored two ways to define popularity. One would be based on ratings, and the other would be based on US gross. Although only one was submitted for A2, it was interesting to compare and contrast the two timelines. The static visualizations can be seen here: 
 
-[ratings](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/A2-grossing.png)
-[ratings](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/A2-rating.png)
+![grossing](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/A2-grossing.png)
+![ratings](https://raw.github.com/CSE512-14W/a3-moreau-ujaved/master/figs/A2-rating.png)
 
 We were motivated to deliver a visualization tool that would allow viewers to not only US gross or ratings, but all meaningful quantitative statistics extracted directly from CSV file grouped by year and genre. In A2, a lot of pre-processing was done in Tableau in order to export relevant data to a more flexible visualization tool. For this assignment, we wanted to process data directly from the raw csv file. There are two reasons for this: (1) the movie data set is small enough (~3200 lines) that it can quickly be processed in javascript, and (2) it would allow us to build a powerful data engine that would provide as much relevant information as possible to the user.
 
