@@ -76,6 +76,7 @@ We got to distribute the responsibilities quite evenly for the project. We found
 
 Thierry's work breakdown (~24 hrs):
 
+* Getting familiar with the dataset (~6 hrs - spent on A2 - not accounted for in total)
 * Learning D3 (5hrs)
 * Looking at examples and formulating objectives (1 hr with Umar)
 * Basic stacked area (static + transitions) chart from example from a clean csv file (6hrs)
